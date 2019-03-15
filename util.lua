@@ -9,10 +9,45 @@
 ---------------------------------------------------------------------------
 
 local io, debug, table = io, debug, table
-local pairs, pcall, require = pairs, pcall, require
+local print, tostring, pairs, pcall, require
+    = print, tostring, pairs, pcall, require
 
 local util = {}
 util.curdir = debug.getinfo(1, 'S').source:match[[^@(.*/).*$]]
+
+-- Simple Log level:
+-- 10 DEBUG
+-- 20 INFO
+-- 30 ERROR
+util.loglevel = 10
+util.logprefix = "Awesome away: "
+
+-- Print msg when util.loglevel<=level
+function util.print_msg(level, leveltxt, msg, msgprefix)
+    if util.loglevel <=level then
+        if msgprefix then
+            msgprefix = tostring(msgprefix) .. ': '
+        else
+            msgprefix = ''
+        end
+        print(util.logprefix .. leveltxt .. ' ' .. msgprefix .. tostring(msg))
+    end
+end
+
+-- Print debug msg when util.loglevel<=10
+function util.print_debug(msg, msgprefix)
+    util.print_msg(10, "[D]", msg, msgprefix)
+end
+
+-- Print info msg when util.loglevel<=20
+function util.print_info(msg, msgprefix)
+    util.print_msg(20, "[I]", msg, msgprefix)
+end
+
+-- Print error msg when util.loglevel<=30
+function util.print_error(msg, msgprefix)
+    util.print_msg(30, "[E]", debug.traceback(msg), msgprefix)
+end
 
 -- Return a sequence of numbers from head to tail by step
 function util.simple_range(head, tail, step)
