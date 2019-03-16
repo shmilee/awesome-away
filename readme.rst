@@ -24,7 +24,7 @@ Installation
 .. code:: bash
 
    cd ~/.config/awesome
-   git clone https://github.com/shmilee/awesome-away.git
+   git clone https://github.com/shmilee/awesome-away.git away
 
 then include `away` into your `rc.lua`
 
@@ -50,7 +50,7 @@ solo wallpaper
    wp.update() -- set next wallpaper
    wp.print_using() -- print using wallpaper
 
-* `name` is one of
+* support `name`:
    - `local`: Use images in the given dicrectory
    - `360chrome`: Fetch http://wallpaper.apc.360.cn/ images
    - `baidu`: Fetch http://image.baidu.com/ images
@@ -122,7 +122,7 @@ combine solo wallpapers `local` `360chrome` `baidu` `bing` etc.
    wp.update() -- set next wallpaper
    wp.print_using() -- print using wallpaper
 
-* support `margs` `candidates`
+* support `margs` `candidates`:
 
   +-----------------------+----------------------------------------------------+---------------------------------+---------+
   | Input Variable        | Meaning                                            | Type                            | Default |
@@ -144,6 +144,7 @@ Widget Usage
 --------------
 
 .. TODO
+
 TODO
 
 
