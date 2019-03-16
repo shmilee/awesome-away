@@ -16,15 +16,23 @@ local os     = { remove = os.remove }
 local io     = { popen = io.popen }
 local string = { format = string.format, gsub = string.gsub, match = string.match }
 local table  = { concat = table.concat, insert = table.insert }
-local next, pairs, tostring = next, pairs, tostring
+local next, type, pairs, tostring = next, type, pairs, tostring
 
 local core = {}
+
+function core.assemble_id_with_screen(screen, id)
+    if type(screen) == table then
+        return string.format("Screen %s %s", screen.index, id)
+    else
+        return string.format("Screen %s %s", screen, id)
+    end
+end
 
 -- RemoteWallPaper: fetch remote images with meta data
 function core.get_remotewallpaper(screen, args)
     local rwallpaper    = { screen=screen, url=nil, path=nil, using=nil }
     local args          = args or {}
-    local id            = args.id or nil
+    local id            = core.assemble_id_with_screen(screen, args.id or nil)
     local api           = args.api or ''
     local query         = args.query or {}
     local choices       = args.choices or {}
@@ -35,6 +43,7 @@ function core.get_remotewallpaper(screen, args)
     local setting       = args.setting or function(rwp)
         gears.wallpaper.maximized(rwp.path[rwp.using], rwp.screen, true)
     end
+    rwallpaper.id = id
     rwallpaper.force_hd = args.force_hd or false
     rwallpaper.get_url  = args.get_url or function(rwp, data, choice)
         return ''
@@ -154,7 +163,7 @@ end
 function core.get_localwallpaper(screen, args)
     local lwallpaper = { screen=screen, path=nil, using=nil }
     local args       = args or {}
-    local id         = args.id or nil
+    local id         = core.assemble_id_with_screen(screen, args.id or nil)
     local dirpath    = args.dirpath or nil
     local imagetype  = args.imagetype or {'jpg', 'jpeg', 'png'}
     local ls         = args.ls or 'ls -a'
@@ -164,6 +173,7 @@ function core.get_localwallpaper(screen, args)
         gears.wallpaper.maximized(lwp.path[lwp.using], lwp.screen, true)
     end
 
+    lwallpaper.id = id
     function lwallpaper.update_info()
         lwallpaper.path = {}
         if type(dirpath) ~= 'string' then
