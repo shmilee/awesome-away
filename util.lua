@@ -14,6 +14,7 @@ local print, tostring, pairs, pcall, require
 
 local util = {}
 util.curdir = debug.getinfo(1, 'S').source:match[[^@(.*/).*$]]
+util.recursion_try_limit = 16
 
 -- Simple Log level:
 -- 10 DEBUG

@@ -19,7 +19,6 @@ local table  = { concat = table.concat, insert = table.insert }
 local next, pairs, tostring = next, pairs, tostring
 
 local core = {}
-local recursion_try_limit = 16
 
 -- RemoteWallPaper: fetch remote images with meta data
 function core.get_remotewallpaper(screen, args)
@@ -105,7 +104,7 @@ function core.get_remotewallpaper(screen, args)
                 if util.get_file_size(rwallpaper.path[i]) == 0 then
                     util.print_info('Size 0 ' .. rwallpaper.path[i], id)
                     recursion_try = recursion_try + 1
-                    if recursion_try <= recursion_try_limit then
+                    if recursion_try <= util.recursion_try_limit then
                         util.print_info('Recursion try ' .. tostring(recursion_try), id)
                         rwallpaper.update()
                     end
@@ -127,7 +126,7 @@ function core.get_remotewallpaper(screen, args)
                         util.print_info('Faild to download ' .. rwallpaper.path[i] .. '!' .. stderr, id)
                         os.remove(rwallpaper.path[i])
                         recursion_try = recursion_try + 1
-                        if recursion_try <= recursion_try_limit then
+                        if recursion_try <= util.recursion_try_limit then
                             util.print_info('Recursion try ' .. tostring(recursion_try), id)
                             rwallpaper.update()
                         end
@@ -209,7 +208,7 @@ function core.get_localwallpaper(screen, args)
         else
             util.print_info('Not readable or size 0: ' .. rwallpaper.path[i], id)
             recursion_try = recursion_try + 1
-            if recursion_try <= recursion_try_limit then
+            if recursion_try <= util.recursion_try_limit then
                 util.print_info('Recursion try ' .. tostring(recursion_try), id)
                 lwallpaper.update()
             end
