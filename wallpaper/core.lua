@@ -21,7 +21,7 @@ local next, type, pairs, tostring = next, type, pairs, tostring
 local core = {}
 
 function core.assemble_id_with_screen(screen, id)
-    if type(screen) == table then
+    if type(screen) == 'screen' then
         return string.format("Screen %s %s", screen.index, id)
     else
         return string.format("Screen %s %s", screen, id)
