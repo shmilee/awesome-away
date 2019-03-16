@@ -20,8 +20,8 @@ util.recursion_try_limit = 16
 -- 10 DEBUG
 -- 20 INFO
 -- 30 ERROR
-util.loglevel = 10
-util.logprefix = "Awesome away: "
+util.loglevel = 20
+util.logprefix = "Away: "
 
 -- Print msg when util.loglevel<=level
 function util.print_msg(level, leveltxt, msg, msgprefix)
