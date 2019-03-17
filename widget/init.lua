@@ -7,4 +7,6 @@
 --  https://opensource.org/licenses/GPL-2.0
 --
 ---------------------------------------------------------------------------
-
+return {
+    lunar = require("away.widget.lunar"),
+}

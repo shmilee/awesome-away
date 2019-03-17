@@ -17,6 +17,21 @@ Dependencies
 
 * curl_: download data with URL
 * dkjson_: decode json data
+* sxtwl_: optional, for `away.widget.lunar`
+
+optional: install sxtwl
+```````````````````````
+
+.. code:: shell
+
+   git clone https://github.com/yuangu/sxtwl_cpp.git
+   mkdir sxtwl_cpp/build
+   cd sxtwl_cpp/build
+   cmake .. -G "Unix Makefiles" -DSXTWL_WRAPPER_LUA=1
+   cmake --build .
+   strip sxtwl_lua.so
+   cp sxtwl_lua.so ~/.config/awesome/sxtwl.so
+
 
 Installation
 ------------
@@ -151,3 +166,4 @@ TODO
 .. _Awesome: https://github.com/awesomeWM/awesome
 .. _curl: https://curl.haxx.se/
 .. _dkjson: https://github.com/LuaDist/dkjson
+.. _sxtwl: https://github.com/yuangu/sxtwl_cpp
