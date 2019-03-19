@@ -10,20 +10,17 @@
 ---------------------------------------------------------------------------
 
 local util  = require("away.util")
-local gears = require("gears")
-local wibox = require("wibox")
+local core  = require("away.widget.core")
 
 local os = { date = os.date }
-
--- Lunar widget
-local lunar = {}
+local string = { format = string.format }
 
 -- 调用寿星天文历库(寿星万年历)
 -- https://github.com/yuangu/sxtwl_cpp
 -- http://www.nongli.net/sxwnl/
 local sxtwl = util.find_available_module({'sxtwl'})
 if sxtwl then
-    lunar.lunar = sxtwl.Lunar()
+    sxtwl = sxtwl.Lunar()
 end
 
 -- 结果索引
@@ -47,34 +44,59 @@ local rmc = {"初一", "初二", "初三", "初四", "初五", "初六", "初七
              "廿五", "廿六", "廿七", "廿八", "廿九", "三十", "卅一"}
 
 local function worker(args)
-    local args     = args or {}
-    local timeout  = args.timeout or 3600
-    local settings = args.settings or function(lunar) end
+    local args   = args or {}
+    args.timeout = args.timeout or 3600
+    args.font    = args.font or nil
 
-    lunar.widget = wibox.widget.textbox('')
-    function lunar.update()
-        if lunar.lunar then
+    function args.update(lunar)
+        if sxtwl then
             local d = os.date('*t')
-            local ld= lunar.lunar:getDayBySolar(d.year, d.month, d.day)
+            local ld= sxtwl:getDayBySolar(d.year, d.month, d.day)
             lunar.now = {
-                year = Gan[ld.Lyear2.tg+1] .. Zhi[ld.Lyear2.dz+1] .. "年",
+                y = d.year,
+                m = d.month,
+                d = d.day,
                 month = ymc[ld.Lmc+1] .. "月",
                 day = rmc[ld.Ldi+1] .. "日",
+                ly = Gan[ld.Lyear2.tg+1] .. Zhi[ld.Lyear2.dz+1] .. "年",
+                lm = Gan[ld.Lmonth2.tg+1] .. Zhi[ld.Lmonth2.dz+1] .. "月",
+                ld = Gan[ld.Lday2.tg+1] .. Zhi[ld.Lday2.dz+1] .. "日",
                 jq = jqmc[ld.qk+1] or '', -- 节气，不存在则为jqmc[0] -> ''
+                cur_dz = ld.cur_dz,
+                cur_xz = ld.cur_xz,
+                cur_lq = ld.cur_lq,
             }
             if ld.Lleap then
-                lunar_now.month = "润" .. lunar_now.month
+                lunar.now.month = "润" .. lunar.now.month
             end
-            settings(lunar)
+            if args.setting then
+                args.setting(lunar)
+            else
+                local now = lunar.now
+                now.icon = nil
+                now.text = now.month .. now.day
+                now.notification_icon = nil
+                now.notification_text =  string.format(
+                    '<b>%s</b>\n公历: %s年%s月%s日\n%s\n节气: %s\n距冬至%s天\n距夏至%s天\n距立秋%s天',
+                    now.text,
+                    now.y, now.m, now.d,
+                    now.ly .. now.lm .. now.ld,
+                    now.jq,
+                    now.cur_dz, now.cur_xz, now.cur_lq)
+            end
+            if lunar.now.icon then
+                lunar.wicon:set_image(lunar.now.icon)
+            end
+            lunar.wtext:set_markup(lunar.now.text)
         else
-            lunar.widget:set_markup('N/A')
+            lunar.wtext:set_markup('N/A')
         end
     end
 
-    lunar.timer = gears.timer({ timeout=timeout, autostart=true, callback=lunar.update })
+    local lunar = core.popup_worker(args)
     lunar.timer:emit_signal('timeout')
 
-    return lunar.widget
+    return lunar
 end
 
 return worker
