@@ -13,8 +13,10 @@ local gears = require("gears")
 local spawn = require("awful.spawn")
 
 local os     = { remove = os.remove }
-local io     = { popen = io.popen }
-local string = { format = string.format, gsub = string.gsub, match = string.match }
+local string = {
+    format = string.format,
+    match = string.match, gmatch = string.gmatch,
+}
 local table  = { concat = table.concat, insert = table.insert }
 local next, type, pairs, tostring = next, type, pairs, tostring
 
@@ -179,20 +181,26 @@ function core.get_localwallpaper(screen, args)
         if type(dirpath) ~= 'string' then
             return false
         end
-        local pfile, i = io.popen(string.format('%s "%s"', ls, dirpath)), 0
-        for filename in pfile:lines() do
-            if string.match(filename, filter) ~= nil then
-                local ext = string.gsub(filename, "(.*%.)(.*)", "%2")
-                for _, it in pairs(imagetype) do
-                    if ext == it then
-                        i = i + 1
-                        lwallpaper.path[i] = dirpath .. '/' .. filename
-                        util.print_debug('Add ' .. lwallpaper.path[i], id)
+        local cmd = string.format('%s "%s"', ls, dirpath)
+        spawn.easy_async(cmd, function(stdout, stderr, reason, exit_code)
+            if exit_code == 0 then
+                local i = 0
+                for filename in string.gmatch(stdout,'[^\r\n]+') do
+                    if string.match(filename, filter) ~= nil then
+                        for _, it in pairs(imagetype) do
+                            if string.match(filename, '%.' .. it .. '$') ~= nil then
+                                i = i + 1
+                                lwallpaper.path[i] = dirpath .. '/' .. filename
+                                util.print_debug('Add ' .. lwallpaper.path[i], id)
+                            end
+                        end
                     end
                 end
+                if async_update then
+                    lwallpaper.update()
+                end
             end
-        end
-        pfile:close()
+        end)
     end
 
     local recursion_try = 0
@@ -234,9 +242,6 @@ function core.get_localwallpaper(screen, args)
     end
 
     lwallpaper.update_info()
-    if async_update then
-        lwallpaper.update()
-    end
 
     return lwallpaper
 end
