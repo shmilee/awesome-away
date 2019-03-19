@@ -155,7 +155,7 @@ function core.get_remotewallpaper(screen, args)
         end
     end
 
-    rwallpaper.timer_info = gears.timer({ timeout = timeout_info, autostart=true, callback=rwallpaper.update_info })
+    rwallpaper.timer_info = gears.timer({ timeout=timeout_info, autostart=true, callback=rwallpaper.update_info })
     rwallpaper.timer_info:emit_signal('timeout')
 
     return rwallpaper

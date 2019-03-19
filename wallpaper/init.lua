@@ -41,7 +41,7 @@ function wallpaper.get_solowallpaper(screen, name, args)
         args.async_update = true
         local swp = wallpaper.available[name](screen, args)
         local timeout = args.timeout or 60
-        swp.timer = gears.timer({ timeout = timeout, autostart=true, callback=swp.update })
+        swp.timer = gears.timer({ timeout=timeout, autostart=true, callback=swp.update })
         function swp.print_using()
             if swp.path == nil or swp.path[swp.using] == nil then
                 util.print_info('Using Wallpaper nil', swp.id)
@@ -142,7 +142,7 @@ function wallpaper.get_miscwallpaper(screen, margs, candidates)
         end
     end
 
-    mwp.timer = gears.timer({ timeout = timeout, autostart=true, callback=mwp.update })
+    mwp.timer = gears.timer({ timeout=timeout, autostart=true, callback=mwp.update })
 
     return mwp
 end
