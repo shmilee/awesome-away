@@ -11,6 +11,7 @@
 local io, debug, table = io, debug, table
 local print, tostring, pairs, pcall, require
     = print, tostring, pairs, pcall, require
+local string = { format = string.format }
 
 local util = {}
 util.curdir = debug.getinfo(1, 'S').source:match[[^@(.*/).*$]]
@@ -82,6 +83,20 @@ function util.get_file_size(path)
     local size = file:seek("end")
     file:close()
     return size
+end
+
+-- Set Markup foreground, background color
+function util.markup_span_color(text, fg, bg)
+    if fg and bg then
+        string.format('<span foreground="%s" background="%s">%s</span>',
+                      fg, bg, text)
+    elseif fg then
+        return string.format('<span foreground="%s">%s</span>', fg, text)
+    elseif  bg then
+        return string.format('<span background="%s">%s</span>', bg, text)
+    else
+        return text
+    end
 end
 
 return util
