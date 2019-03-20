@@ -7,6 +7,16 @@
 --  https://opensource.org/licenses/GPL-2.0
 --
 ---------------------------------------------------------------------------
-return {
-    lunar = require("away.widget.lunar"),
-}
+
+local setmetatable, rawget, require = setmetatable, rawget, require
+
+return setmetatable({}, {
+    __index = function(table, key)
+        local module = rawget(table, key)
+        if not module then
+            module = require('away.widget.' .. key)
+            table[key] = module
+        end
+        return module
+    end
+})
