@@ -17,7 +17,16 @@ Dependencies
 
 * curl_: download data with URL
 * dkjson_: decode json data
+* acpi_: optional, for `away.widget.battery`
 * sxtwl_: optional, for `away.widget.lunar`
+
+optional: install acpi
+```````````````````````
+
+.. code:: shell
+
+    sudo pacman -S acpi # archlinux
+    sudo apt-get install acpi # debian, ubuntu, etc
 
 optional: install sxtwl
 ```````````````````````
@@ -158,12 +167,75 @@ combine solo wallpapers `local` `360chrome` `baidu` `bing` etc.
 Widget Usage
 --------------
 
-.. TODO
+Battery
+````````
 
-TODO
+.. code:: lua
+
+    battery = away.widget.battery({
+        timeout = 5,
+        font ='Ubuntu Mono 12',
+        --setting = function(battery) .... end,
+    })
+    battery:attach(battery.wicon)
+
+
+农历
+````````
+
+.. code:: lua
+
+    lunar = away.widget.lunar({
+        timeout  = 10800,
+        font ='Ubuntu Mono 12',
+        --setting = function(lunar) .... end,
+    })
+    lunar:attach(lunar.wtext)
+
+Weather
+````````
+
+.. code:: lua
+
+    -- available weather module's query
+    weather_querys = {
+        etouch = {
+            citykey=101210101, --杭州
+        },
+        meizu = {
+            cityIds=101210101,
+        },
+        tianqi = {
+            version='v1',
+            cityid= 101210101,
+        },
+        xiaomiv2 = {
+            cityId=101210101,
+        },
+        xiaomiv3 ={
+            latitude = 0,
+            longitude = 0,
+            locationKey = 'weathercn:101210101', --杭州
+            appKey = 'weather20151024',
+            sign = 'zUFJoAR2ZVrDy1vF3D07',
+            isGlobal = 'false',
+            locale = 'zh_cn',
+            days = 6,
+        },
+    }
+    weather = away.widget.weather['tianqi']({
+        timeout = 600, -- 10 min
+        query = weather_querys['tianqi'],
+        --curl = 'curl -f -s -m 1.7'
+        --font ='Ubuntu Mono 12',
+        --get_info = function(weather, data) end,
+        --setting = function(weather) end,
+    })
+    weather:attach(weather.wicon)
 
 
 .. _Awesome: https://github.com/awesomeWM/awesome
 .. _curl: https://curl.haxx.se/
 .. _dkjson: https://github.com/LuaDist/dkjson
+.. _acpi: https://sourceforge.net/projects/acpiclient/files/acpiclient/
 .. _sxtwl: https://github.com/yuangu/sxtwl_cpp
