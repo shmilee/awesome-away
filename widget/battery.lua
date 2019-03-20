@@ -64,7 +64,7 @@ local function worker(args)
                 setting(bat)
                 return
             end
-            if string.match(stdout, '^No support') then
+            if string.match(stderr, '^No support') then
                 bat.now.status = 'AC'
                 bat.now.notification_text = 'No battery. Using AC.'
                 setting(bat)
