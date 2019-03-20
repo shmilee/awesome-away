@@ -38,4 +38,12 @@ local function get_XXXweather(args)
     return base.worker(args)
 end
 
+-- TODO multi API:
+-- 1. 国家气象局 https://www.jianshu.com/p/e3e04cf3fc0f
+--    http://www.weather.com.cn/data/cityinfo/101190408.html
+--    http://mobile.weather.com.cn/data/forecast/101010100.html?_=1381891660081
+-- 2. 中国气象台 www.nmc.cn/f/rest/
+--    https://github.com/sonichy/WEATHER_DDE_DOCK/issues/13
+--    https://github.com/ZhijianZhang/yiliang-note/blob/master/博客/中央天气网.md
+
 return get_XXXweather
