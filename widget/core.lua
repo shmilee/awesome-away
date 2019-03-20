@@ -43,7 +43,7 @@ function core.popup_worker(args)
         self:hide()
         self.notification = naughty.notify({
             text    = self.now.notification_text or 'N/A',
-            icon    = self.now.inotification_icon,
+            icon    = self.now.notification_icon,
             font    = args.font,
             timeout = 0,
             screen  = awful.screen.focused()
