@@ -224,7 +224,7 @@ function core.get_localwallpaper(screen, args)
                 setting(lwallpaper)
             end)
         else
-            util.print_info('Not readable or size 0: ' .. rwallpaper.path[i], id)
+            util.print_info('Not readable or size 0: ' .. lwallpaper.path[i], id)
             recursion_try = recursion_try + 1
             if recursion_try <= util.recursion_try_limit then
                 util.print_info('Recursion try ' .. tostring(recursion_try), id)
