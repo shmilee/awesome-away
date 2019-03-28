@@ -57,7 +57,7 @@ local function worker(args)
                 m = d.month,
                 d = d.day,
                 month = ymc[ld.Lmc+1] .. "月",
-                day = rmc[ld.Ldi+1] .. "日",
+                day = rmc[ld.Ldi+1],
                 ly = Gan[ld.Lyear2.tg+1] .. Zhi[ld.Lyear2.dz+1] .. "年",
                 lm = Gan[ld.Lmonth2.tg+1] .. Zhi[ld.Lmonth2.dz+1] .. "月",
                 ld = Gan[ld.Lday2.tg+1] .. Zhi[ld.Lday2.dz+1] .. "日",
