@@ -207,7 +207,7 @@ Weather
         },
         tianqi = {
             version='v1',
-            cityid= 101210101,
+            --cityid= 101210101, -- default weather by IP address
         },
         xiaomiv2 = {
             cityId=101210101,
