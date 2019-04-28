@@ -19,13 +19,10 @@ local string = { format = string.format }
 local type = type
 
 local function worker(args)
-    local wen    = { date=nil, text=nil }
     local args   = args or {}
     local api    = args.api or 'https://interface.meiriyiwen.com/article/today?dev=1'
     local curl   = args.curl or 'curl -f -s -m 1.7'
     local cmd    = string.format("%s '%s'", curl, api)
-    local font   = args.font or nil
-    local ratio  = args.ratio or 0.88
     local setting = args.setting or function(data)
         util.print_debug('meiriyiwen: ' .. (data['data']['title'] or 'N/A'))
         local content = data['data']['content']
@@ -34,8 +31,24 @@ local function worker(args)
         return string.format("\t\t<b>%s</b> (%s)\n%s\n",
             data['data']['title'], data['data']['author'], content)
     end
+    local wen = {
+        date=nil, text=nil,
+        font=args.font or nil,
+        font_size=args.font_size or args.fsize or 10,
+        ratio=args.ratio or 0,
+        height=args.height or 0.88,
+    }
 
-    function wen.update()
+    function wen:set(uargs)
+        local uargs = uargs or {}
+        self.font = uargs.font or self.font
+        self.font_size = uargs.font_size or uargs.fsize or self.font_size
+        self.ratio = uargs.ratio or 0
+        self.height = uargs.height or self.height
+    end
+
+    function wen.update(uargs)
+        wen:set(uargs)
         if wen.text then
             if wen.date == os.date('%Y%m%d') then
                 wen:show()
@@ -55,11 +68,18 @@ local function worker(args)
     function wen:show()
         self:hide()
         local screen = awful.screen.focused()
+        local text = self.text
+        if self.ratio > 0 then
+            local start = text:find('\n', math.floor(text:len()*self.ratio))
+            if start then
+                text = text:sub(start)
+            end
+        end
         self.notification = naughty.notify({
-            text    = self.text or 'N/A',
-            font    = font,
+            text    = text or 'N/A',
+            font    = string.format("%s %s", self.font, self.font_size),
             timeout = 0,
-            height  = math.floor(screen.geometry.height*ratio),
+            height  = math.floor(screen.geometry.height*self.height),
             screen  = screen
         })
     end
