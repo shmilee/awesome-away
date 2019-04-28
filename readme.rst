@@ -233,6 +233,31 @@ Weather
     })
     weather:attach(weather.wicon)
 
+每日一文
+`````````
+
+.. code:: lua
+
+    meiriyiwen = away.widget.meiriyiwen({
+        font = 'WenQuanYi Micro Hei',
+        font_size = 15,
+        ratio = 0, -- 0: all content; (0-1): content*ratio
+        height = 0.9, -- screen.height*0.9
+    })
+    yiwen = meiriyiwen.update
+    -- 长文章后半段, Super + x : yiwen({ratio=0.5})
+
+Memory
+``````
+
+.. code:: lua
+
+    mem = away.widget.memory({
+        timeout = 2,
+        --settings = function(mem) end,
+    })
+    mem.wicon:set_image(theme.mem)
+
 
 .. _Awesome: https://github.com/awesomeWM/awesome
 .. _curl: https://curl.haxx.se/
