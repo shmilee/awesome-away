@@ -15,6 +15,30 @@ local naughty = require("naughty")
 
 local core = {}
 
+-- base widget:
+-- base.wtext -> textbox; base.wicon -> imagebox
+-- base.now -> {}; base.timer
+-- args:
+--   timeout, update(base)
+function core.worker(args)
+    local base = {
+        wicon = wibox.widget.imagebox(),
+        wtext = wibox.widget.textbox(''),
+        now = {
+            icon = nil,
+            text = nil,
+        },
+    }
+
+    function base.update()
+        args.update(base)
+    end
+
+    base.timer = gears.timer({ timeout=args.timeout, autostart=true, callback=base.update })
+
+    return base
+end
+
 -- popup base widget:
 -- base:show(), base:hide(), base:attach(obj)
 -- base.wtext -> textbox; base.wicon -> imagebox
