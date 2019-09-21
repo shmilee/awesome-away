@@ -81,6 +81,7 @@ solo wallpaper
    - `bing`: Fetch https://www.bing.com daily images
    - `nationalgeographic`: Fetch https://www.nationalgeographic.com/photography/photo-of-the-day/ images
    - `spotlight`: Fetch Windows spotlight's images
+   - `wallhaven`: Fetch https://wallhaven.cc/ images
 
 * support `args` of `local`:
 

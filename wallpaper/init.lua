@@ -27,6 +27,7 @@ wallpaper.available = {
     ['bing'] = require("away.wallpaper.bing"),
     ['nationalgeographic'] = require("away.wallpaper.nationalgeographic"),
     ['spotlight'] = require("away.wallpaper.spotlight"),
+    ['wallhaven'] = require("away.wallpaper.wallhaven"),
     -- Need to sign up
     -- unsplash : https://unsplash.com/documentation
     -- -- client_id, curl xxx -d ''
