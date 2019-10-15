@@ -26,9 +26,9 @@ local function get_XXXwallpaper(screen, args)
     args.cachedir = args.cachedir or gfs.get_xdg_cache_home() .. "wallpaper-XXX"
     args.timeout_info = args.timeout_info or 86400
     args.async_update = args.async_update or false
-    args.setting      = args.setting or function(wp)
-        gears.wallpaper.maximized(wp.path[wp.using], wp.screen, true)
-    end
+    --args.setting      = args.setting or function(wp)
+    --    gears.wallpaper.maximized(wp.path[wp.using], wp.screen, false)
+    --end
     args.force_hd = args.force_hd or true
     args.get_url  = args.get_url or function(wp, data, choice)
         return

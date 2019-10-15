@@ -43,7 +43,7 @@ function core.get_remotewallpaper(screen, args)
     local timeout_info  = args.timeout_info or 86400
     local async_update  = args.async_update or false
     local setting       = args.setting or function(rwp)
-        gears.wallpaper.maximized(rwp.path[rwp.using], rwp.screen, true)
+        gears.wallpaper.maximized(rwp.path[rwp.using], rwp.screen, false)
     end
     rwallpaper.id = id
     rwallpaper.force_hd = args.force_hd or false
@@ -172,7 +172,7 @@ function core.get_localwallpaper(screen, args)
     local filter     = args.filter or '.*'
     local async_update = args.async_update or false
     local setting      = args.setting or function(lwp)
-        gears.wallpaper.maximized(lwp.path[lwp.using], lwp.screen, true)
+        gears.wallpaper.maximized(lwp.path[lwp.using], lwp.screen, false)
     end
 
     lwallpaper.id = id
