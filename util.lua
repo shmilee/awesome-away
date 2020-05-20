@@ -21,20 +21,19 @@ util.recursion_try_limit = 16
 -- 10 DEBUG
 -- 20 INFO
 -- 30 ERROR
-local loglevel = 20
-local logprefix = "Away: "
-local log_std = 'stderr' -- 'stdout'
+util.log_level = 20
+util.log_std = 'stderr' -- 'stdout'
 
--- Print msg when loglevel<=level
+-- Print msg when level>=log_level
 function util.print_msg(level, leveltxt, msg, msgprefix)
-    if loglevel <=level then
+    if level >= util.log_level then
         if msgprefix then
             msgprefix = tostring(msgprefix) .. ': '
         else
             msgprefix = ''
         end
-        msg = logprefix .. leveltxt .. ' ' .. msgprefix .. tostring(msg)
-        if log_std == 'stderr' then
+        msg = "Away: " .. leveltxt .. ' ' .. msgprefix .. tostring(msg)
+        if util.log_std == 'stderr' then
             io.stderr:write(msg .. '\n')
             io.flush()
         else
@@ -43,17 +42,17 @@ function util.print_msg(level, leveltxt, msg, msgprefix)
     end
 end
 
--- Print debug msg when loglevel<=10
+-- Print debug msg when 10>=log_level
 function util.print_debug(msg, msgprefix)
     util.print_msg(10, "[D]", msg, msgprefix)
 end
 
--- Print info msg when loglevel<=20
+-- Print info msg when 20>=log_level
 function util.print_info(msg, msgprefix)
     util.print_msg(20, "[I]", msg, msgprefix)
 end
 
--- Print error msg when loglevel<=30
+-- Print error msg when 30>=log_level
 function util.print_error(msg, msgprefix)
     util.print_msg(30, "[E]", debug.traceback(msg), msgprefix)
 end
