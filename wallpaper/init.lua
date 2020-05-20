@@ -48,6 +48,12 @@ function wallpaper.turn_on_update_by_tag(wp)
         for _, tag in pairs(wp.screen.tags) do
             util.print_debug('Done for tag '.. tag.name, id)
             tag:connect_signal("property::selected", function (t)
+                if not t.selected then
+                    -- selected -> not selected
+                    util.print_debug('Tag ' .. t.name .. ' not selected.', id)
+                    return
+                end
+                -- not selected -> selected
                 util.print_info('Update as ' .. t.name .. ' is selected.', id)
                 wp.update()
         end)
