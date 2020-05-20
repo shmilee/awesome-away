@@ -35,6 +35,27 @@ wallpaper.available = {
     -- -- key, orientation
 }
 
+function wallpaper.turn_on_update_by_tag(wp)
+    local nums = #wp.screen.tags
+    local id = core.assemble_id_with_screen(wp.screen, 'wallpaper')
+    if nums == 0 then
+        util.print_error('No tags to do selected signal! ' ..
+            'Please check your rc.lua, ' ..
+            'and set wallpaper after tags are created!', id)
+        wp.update_by_tag = false
+    else
+        util.print_debug(tostring(nums) .. ' tags to do selected signal.', id)
+        for _, tag in pairs(wp.screen.tags) do
+            util.print_debug('Done for tag '.. tag.name, id)
+            tag:connect_signal("property::selected", function (t)
+                util.print_info('Update as ' .. t.name .. ' is selected.', id)
+                wp.update()
+        end)
+        end
+        wp.update_by_tag = true
+    end
+end
+
 -- Solo Wallpaper
 function wallpaper.get_solowallpaper(screen, name, args)
     if wallpaper.available[name] ~= nil then
@@ -51,6 +72,9 @@ function wallpaper.get_solowallpaper(screen, name, args)
                 util.print_info('Using Wallpaper ' .. swp.path[swp.using], swp.id)
                 naughty.notify({ title = 'Using Wallpaper ' .. swp.path[swp.using]})
             end
+        end
+        if args.update_by_tag then
+            wallpaper.turn_on_update_by_tag(swp)
         end
         return swp
     else
@@ -144,6 +168,10 @@ function wallpaper.get_miscwallpaper(screen, margs, candidates)
     end
 
     mwp.timer = gears.timer({ timeout=timeout, autostart=true, callback=mwp.update })
+
+    if margs.update_by_tag then
+        wallpaper.turn_on_update_by_tag(mwp)
+    end
 
     return mwp
 end
