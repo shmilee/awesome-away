@@ -31,6 +31,9 @@ local function get_bingwallpaper(screen, args)
     args.force_hd = args.force_hd or true
     args.get_url  = args.get_url or function(wp, data, choice)
         local suffix = "_1920x1080.jpg"
+        if wp.force_hd == "UHD" then
+            suffix = "_UHD.jpg"
+        end
         if not wp.force_hd and wp.screen.geometry.height < 800 then
             suffix = "_1366x768.jpg"
         end
