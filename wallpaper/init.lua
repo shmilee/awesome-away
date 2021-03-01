@@ -182,4 +182,7 @@ function wallpaper.get_miscwallpaper(screen, margs, candidates)
     return mwp
 end
 
+-- Video Wallpaper
+wallpaper.get_videowallpaper = core.get_videowallpaper
+
 return wallpaper

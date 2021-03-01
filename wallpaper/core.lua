@@ -165,9 +165,9 @@ end
 function core.get_localwallpaper(screen, args)
     local lwallpaper = { screen=screen, path=nil, using=nil }
     local args       = args or {}
-    local id         = core.assemble_id_with_screen(screen, args.id or nil)
+    local id         = core.assemble_id_with_screen(screen, args.id or 'Dir')
     local dirpath    = args.dirpath or nil
-    local imagetype  = args.imagetype or {'jpg', 'jpeg', 'png'}
+    local filetype   = args.filetype or {'jpg', 'jpeg', 'png'}
     local ls         = args.ls or 'ls -a'
     local filter     = args.filter or '.*'
     local async_update = args.async_update or false
@@ -187,7 +187,7 @@ function core.get_localwallpaper(screen, args)
                 local i = 0
                 for filename in string.gmatch(stdout,'[^\r\n]+') do
                     if string.match(filename, filter) ~= nil then
-                        for _, it in pairs(imagetype) do
+                        for _, it in pairs(filetype) do
                             if string.match(filename, '%.' .. it .. '$') ~= nil then
                                 i = i + 1
                                 lwallpaper.path[i] = dirpath .. '/' .. filename
@@ -244,6 +244,122 @@ function core.get_localwallpaper(screen, args)
     lwallpaper.update_info()
 
     return lwallpaper
+end
+
+-- VideoWallPaper: Use videos in the given dicrectory
+function core.get_videowallpaper(screen, args)
+    local args = args or {}
+    local id   = core.assemble_id_with_screen(screen, args.id or 'Video')
+    local path = args.path or nil
+    local xwinwrap = args.xwinwrap or 'xwinwrap'
+    local xargs    = args.xargs or {
+        --'-d -st -ni -s -nf -b -un -argb -fs -fdt', -- -d, kill twice
+        '-b -ov -ni -nf -un -s -st -sp -o 0.9',
+        --'-fs -sh rectangle',
+    }
+    local player = args.player or 'mpv'
+    local pargs  = args.pargs or {
+        '-wid WID --stop-screensaver=no',
+        '--hwdec=auto --hwdec-codecs=all',
+        '--no-audio --no-osc --no-osd-bar --no-input-default-bindings',
+        '--loop-file',
+        '--no-keepaspect',
+    }
+    local after_prg = args.after_prg or 'conky\\s+-c\\s+.*/awesome/conky.lua'
+    local videowall = { screen=screen, id=id, path=nil, pid=nil }
+    local xargs_str = table.concat(xargs, ' ')
+    local pargs_str = table.concat(pargs, ' ')
+    local g   = screen.geometry
+    local cmd = string.format("%s -g %dx%d+%d+%d %s -- %s %s",
+        xwinwrap, g.width, g.height, g.x, g.y, xargs_str, player, pargs_str)
+    if type(path) == 'string' then
+        if gears.filesystem.file_readable(path) then
+            cmd = string.format("%s '%s'", cmd, path)
+            util.print_info('video wallpaper cmd: ' .. cmd, id)
+            videowall.path = path
+        else
+            util.print_error('Lost video wallpaper: ' .. path, id)
+        end
+    else
+        util.print_error('Please set video wallpaper path!', id)
+    end
+
+    --pid: https://awesomewm.org/doc/api/libraries/awful.spawn.html#easy_async_with_shell
+    local function setting()
+        local script = [[bash -c "
+            i=0
+            while [ \$i -lt 20 ]; do
+                if pgrep -f -u $USER -x '%s'; then
+                    exit 0
+                fi
+                sleep 2
+                ((i += 2))
+            done
+            exit 1
+        "]]
+        if videowall.path ~= nil then
+            spawn.easy_async_with_shell(string.format(script, after_prg), function(a, b, c, exit_code)
+                if exit_code == 0 then
+                    util.print_debug('Find process: ' .. after_prg, id)
+                else
+                    util.print_debug('Cannot find process: ' .. after_prg, id)
+                end
+                util.print_info('Setting VideoWallpaper: ' .. videowall.path, id)
+                videowall.pid = spawn.easy_async_with_shell(cmd,
+                    function(stdout, stderr, reason, exit_code)
+                        if exit_code == 0 then
+                            util.print_info('Exit VideoWallpaper without errors!', id)
+                            util.print_info('>> stdout: ' .. stdout, id)
+                            util.print_info('>> stderr: ' .. stderr, id)
+                        else
+                            util.print_info('Faild to set VideoWallPaper! ' .. stderr, id)
+                            videowall.pid = nil
+                        end
+                    end
+                )
+                util.print_info('Set VideoWallpaper with PID: ' .. videowall.pid, id)
+            end)
+        else
+            videowall.pid = nil
+        end
+    end
+
+    function videowall.update()
+        if videowall.pid ~= nil and videowall.pid > 1 then
+            spawn.easy_async(string.format('kill %d', videowall.pid),
+                function(stdout, stderr, reason, exit_code)
+                    if exit_code == 0 then
+                        util.print_debug('Killed PID ' .. videowall.pid, id)
+                        setting()
+                    else
+                        util.print_info('Faild to kill PID ' .. videowall.pid .. '!' .. stderr, id)
+                        spawn.easy_async(string.format('kill -9 %d', videowall.pid),
+                            function(stdout, stderr, reason, exit_code)
+                                if exit_code == 0 then
+                                    util.print_debug('Killed -9 PID ' .. videowall.pid, id)
+                                else
+                                    util.print_info('Faild to kill -9 PID ' .. videowall.pid .. '!' .. stderr, id)
+                                end
+                                setting()
+                            end
+                        )
+                    end
+                end
+            )
+        else
+            setting()
+        end
+    end
+
+    function videowall.print_using()
+        if videowall.path == nil then
+            return nil
+        else
+            return videowall.path
+        end
+    end
+
+    return videowall
 end
 
 return core

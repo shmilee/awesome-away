@@ -17,8 +17,22 @@ Dependencies
 
 * curl_: download data with URL
 * dkjson_: decode json data
+* xwinwrap_: optional, for video wallpaper `away.wallpaper.get_videowallpaper`
+* mpv_: optional, for video wallpaper `away.wallpaper.get_videowallpaper`
 * acpi_: optional, for `away.widget.battery`
 * sxtwl_: optional, for `away.widget.lunar`
+
+optional: install xwinwrap & mpv
+````````````````````````````````
+
+.. code:: shell
+
+    # archlinux
+    sudo pacman -S mpv
+    sudo yay -S xwinwrap-git
+    # debian, ubuntu, etc
+    sudo apt-get install mpv
+    # install xwinwrap from source, see its homepage
 
 optional: install acpi
 ```````````````````````
@@ -176,6 +190,43 @@ combine solo wallpapers `local` `360chrome` `baidu` `bing` etc.
   |                       | and args.update_by_tag are ignored.                |                                 |         |
   +-----------------------+----------------------------------------------------+---------------------------------+---------+
 
+video wallpaper
+```````````````
+
+.. code:: lua
+
+   -- get_videowallpaper(screen, args)
+   wp = away.wallpaper.get_videowallpaper(screen, {
+      id='Video test',
+      path='/path/to/video/file.mp4',
+   })
+   wp.update() -- set wallpaper
+   wp.print_using() -- print video path
+
+* support `args`:
+
+  +---------------+----------------------------------------------------+------------------+------------------------+
+  | Argument      | Meaning                                            | Type             | Default                |
+  +===============+====================================================+==================+========================+
+  | id            | ID                                                 | string           | 'Video'                |
+  +---------------+----------------------------------------------------+------------------+------------------------+
+  | path          | video path                                         | string           | nil                    |
+  +---------------+----------------------------------------------------+------------------+------------------------+
+  | xwinwrap      | xwinwrap cmd                                       | string           | 'xwinwrap'             |
+  +---------------+----------------------------------------------------+------------------+------------------------+
+  | xargs         | options for xwinwrap (without -g)                  | table of string  | {'-b -ov -ni -nf -un   |
+  |               |                                                    |                  | -s -st -sp -o 0.9'}    |
+  +---------------+----------------------------------------------------+------------------+------------------------+
+  | player        | video player                                       | string           | 'mpv'                  |
+  +---------------+----------------------------------------------------+------------------+------------------------+
+  | pargs         | options for player                                 | table of string  | { '-wid WID  ...etc ', |
+  |               |                                                    |                  | '--loop-file ...etc'}  |
+  +---------------+----------------------------------------------------+------------------+------------------------+
+  | after_prg     | set video wallpaper after *after_prg* started      | string           | 'conky\\s+-c\\s+.*/awe |
+  |               |                                                    |                  | some/conky.lua'        |
+  +---------------+----------------------------------------------------+------------------+------------------------+
+
+
 Widget Usage
 --------------
 
@@ -274,5 +325,7 @@ Memory
 .. _Awesome: https://github.com/awesomeWM/awesome
 .. _curl: https://curl.haxx.se/
 .. _dkjson: https://github.com/LuaDist/dkjson
+.. _xwinwrap: https://github.com/ujjwal96/xwinwrap
+.. _mpv: https://mpv.io/
 .. _acpi: https://sourceforge.net/projects/acpiclient/files/acpiclient/
 .. _sxtwl: https://github.com/yuangu/sxtwl_cpp
