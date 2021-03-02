@@ -273,7 +273,8 @@ function core.get_videowallpaper(screen, args)
     local cmd = string.format("%s -g %dx%d+%d+%d %s -- %s %s",
         xwinwrap, g.width, g.height, g.x, g.y, xargs_str, player, pargs_str)
     if type(path) == 'string' then
-        if gears.filesystem.file_readable(path) then
+        if (path:match('^http://') or path:match('^https://')
+                or gears.filesystem.file_readable(path)) then
             cmd = string.format("%s '%s'", cmd, path)
             util.print_info('video wallpaper cmd: ' .. cmd, id)
             videowall.path = path
