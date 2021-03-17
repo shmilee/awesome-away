@@ -265,7 +265,7 @@ function core.get_videowallpaper(screen, args)
         '--loop-file',
         '--no-keepaspect',
     }
-    local after_prg = args.after_prg or 'conky\\s+-c\\s+.*/awesome/conky.lua'
+    local after_prg = args.after_prg or nil
     local videowall = { screen=screen, id=id, path=nil, pid=nil }
     local xargs_str = table.concat(xargs, ' ')
     local pargs_str = table.concat(pargs, ' ')
@@ -287,23 +287,28 @@ function core.get_videowallpaper(screen, args)
 
     --pid: https://awesomewm.org/doc/api/libraries/awful.spawn.html#easy_async_with_shell
     local function setting()
-        local script = [[bash -c "
-            i=0
-            while [ \$i -lt 20 ]; do
-                if pgrep -f -u $USER -x '%s'; then
-                    exit 0
-                fi
-                sleep 2
-                ((i += 2))
-            done
-            exit 1
-        "]]
+        local script = 'echo'
+        if after_prg ~= nil then
+            script = string.format([[bash -c "
+                i=0
+                while [ \$i -lt 20 ]; do
+                    if pgrep -f -u $USER -x '%s'; then
+                        exit 0
+                    fi
+                    sleep 2
+                    ((i += 2))
+                done
+                exit 1
+            "]], after_prg)
+        end
         if videowall.path ~= nil then
-            spawn.easy_async_with_shell(string.format(script, after_prg), function(a, b, c, exit_code)
-                if exit_code == 0 then
-                    util.print_debug('Find process: ' .. after_prg, id)
-                else
-                    util.print_debug('Cannot find process: ' .. after_prg, id)
+            spawn.easy_async_with_shell(script, function(a, b, c, exit_code)
+                if after_prg ~= nil then
+                    if exit_code == 0 then
+                        util.print_debug('Find process: ' .. after_prg, id)
+                    else
+                        util.print_debug('Cannot find process: ' .. after_prg, id)
+                    end
                 end
                 util.print_info('Setting VideoWallpaper: ' .. videowall.path, id)
                 videowall.pid = spawn.easy_async_with_shell(cmd,
