@@ -224,7 +224,7 @@ video wallpaper
   +-----------+---------------------------------------------------------+-----------------+------------------------+
   | after_prg | set wallpaper after *after_prg* (pgrep pattern) started | string          | nil                    |
   +-----------+---------------------------------------------------------+-----------------+------------------------+
-  | timeout   | refresh timeout seconds for updating wallpaper          | number (>=0)    | 0 (do not update)     |
+  | timeout   | refresh timeout seconds for updating wallpaper          | number (>=0)    | 0 (do not update)      |
   +-----------+---------------------------------------------------------+-----------------+------------------------+
 
 
