@@ -266,6 +266,8 @@ function core.get_videowallpaper(screen, args)
         '--no-keepaspect',
     }
     local after_prg = args.after_prg or nil
+    local timeout       = args.timeout or 0
+    local async_update  = args.async_update or true
     local videowall = { screen=screen, id=id, path=nil, pid=nil }
     local xargs_str = table.concat(xargs, ' ')
     local pargs_str = table.concat(pargs, ' ')
@@ -362,6 +364,15 @@ function core.get_videowallpaper(screen, args)
             return nil
         else
             return videowall.path
+        end
+    end
+
+    if videowall.path ~= nil then
+        if timeout > 0 then
+            videowall.timer = gears.timer({ timeout=timeout, autostart=true, callback=videowall.update })
+        end
+        if async_update then
+            videowall.update()
         end
     end
 

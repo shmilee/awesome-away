@@ -200,7 +200,7 @@ video wallpaper
       id='Video test',
       path='/path/to/video/file.mp4',
    })
-   wp.update() -- set wallpaper
+   wp.update() -- update wallpaper, reopen player
    wp.print_using() -- print video path
 
 * support `args`:
@@ -223,6 +223,8 @@ video wallpaper
   |           |                                                         |                 | '--loop-file ...etc'}  |
   +-----------+---------------------------------------------------------+-----------------+------------------------+
   | after_prg | set wallpaper after *after_prg* (pgrep pattern) started | string          | nil                    |
+  +-----------+---------------------------------------------------------+-----------------+------------------------+
+  | timeout   | refresh timeout seconds for updating wallpaper          | number (>=0)    | 0 (do not update)     |
   +-----------+---------------------------------------------------------+-----------------+------------------------+
 
 
