@@ -19,6 +19,7 @@ Dependencies
 * dkjson_: decode json data
 * xwinwrap_: optional, for video wallpaper `away.wallpaper.get_videowallpaper`
 * mpv_: optional, for video wallpaper `away.wallpaper.get_videowallpaper`
+* you-get_: optional, for Bilibili video wallpaper `away.wallpaper.get_bilivideowallpaper`
 * acpi_: optional, for `away.widget.battery`
 * sxtwl_: optional, for `away.widget.lunar`
 
@@ -196,6 +197,7 @@ video wallpaper
 .. code:: lua
 
    -- get_videowallpaper(screen, args)
+   -- get_bilivideowallpaper(screen, args)
    wp = away.wallpaper.get_videowallpaper(screen, {
       id='Video test',
       path='/path/to/video/file.mp4',
@@ -205,27 +207,31 @@ video wallpaper
 
 * support `args`:
 
-  +-----------+---------------------------------------------------------+-----------------+------------------------+
-  | Argument  | Meaning                                                 | Type            | Default                |
-  +===========+=========================================================+=================+========================+
-  | id        | ID                                                      | string          | 'Video'                |
-  +-----------+---------------------------------------------------------+-----------------+------------------------+
-  | path      | video path or url                                       | string          | nil                    |
-  +-----------+---------------------------------------------------------+-----------------+------------------------+
-  | xwinwrap  | xwinwrap cmd                                            | string          | 'xwinwrap'             |
-  +-----------+---------------------------------------------------------+-----------------+------------------------+
-  | xargs     | options for xwinwrap (without -g)                       | table of string | {'-b -ov -ni -nf -un   |
-  |           |                                                         |                 | -s -st -sp -o 0.9'}    |
-  +-----------+---------------------------------------------------------+-----------------+------------------------+
-  | player    | video player                                            | string          | 'mpv'                  |
-  +-----------+---------------------------------------------------------+-----------------+------------------------+
-  | pargs     | options for player                                      | table of string | { '-wid WID  ...etc ', |
-  |           |                                                         |                 | '--loop-file ...etc'}  |
-  +-----------+---------------------------------------------------------+-----------------+------------------------+
-  | after_prg | set wallpaper after *after_prg* (pgrep pattern) started | string          | nil                    |
-  +-----------+---------------------------------------------------------+-----------------+------------------------+
-  | timeout   | refresh timeout seconds for updating wallpaper          | number (>=0)    | 0 (do not update)      |
-  +-----------+---------------------------------------------------------+-----------------+------------------------+
+  +--------------+---------------------------------------------------------+-----------------+------------------------+
+  | Argument     | Meaning                                                 | Type            | Default                |
+  +==============+=========================================================+=================+========================+
+  | id           | ID                                                      | string          | 'Video'                |
+  +--------------+---------------------------------------------------------+-----------------+------------------------+
+  | path         | video path or url                                       | string          | nil                    |
+  +--------------+---------------------------------------------------------+-----------------+------------------------+
+  | get_realpath | get real video path from url                            | function        | nil                    |
+  +--------------+---------------------------------------------------------+-----------------+------------------------+
+  | xwinwrap     | xwinwrap cmd                                            | string          | 'xwinwrap'             |
+  +--------------+---------------------------------------------------------+-----------------+------------------------+
+  | xargs        | options for xwinwrap (without -g)                       | table of string | {'-b -ov -ni -nf -un   |
+  |              |                                                         |                 | -s -st -sp -o 0.9'}    |
+  +--------------+---------------------------------------------------------+-----------------+------------------------+
+  | player       | video player                                            | string          | 'mpv'                  |
+  +--------------+---------------------------------------------------------+-----------------+------------------------+
+  | pargs        | options for player                                      | table of string | { '-wid WID  ...etc ', |
+  |              |                                                         |                 | '--loop-file ...etc'}  |
+  +--------------+---------------------------------------------------------+-----------------+------------------------+
+  | after_prg    | set wallpaper after *after_prg* (pgrep pattern) started | string          | nil                    |
+  +--------------+---------------------------------------------------------+-----------------+------------------------+
+  | timeout      | refresh timeout seconds for updating wallpaper          | number (>=0)    | 0 (do not update)      |
+  +--------------+---------------------------------------------------------+-----------------+------------------------+
+
+* additional `arg` for Bili Video Wallpaper, `choices={'dash-flv', 'flv720', ...}`
 
 
 Widget Usage
@@ -328,5 +334,6 @@ Memory
 .. _dkjson: https://github.com/LuaDist/dkjson
 .. _xwinwrap: https://github.com/ujjwal96/xwinwrap
 .. _mpv: https://mpv.io/
+.. _you-get: https://www.soimort.org/you-get/
 .. _acpi: https://sourceforge.net/projects/acpiclient/files/acpiclient/
 .. _sxtwl: https://github.com/yuangu/sxtwl_cpp

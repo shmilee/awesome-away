@@ -251,6 +251,8 @@ function core.get_videowallpaper(screen, args)
     local args = args or {}
     local id   = core.assemble_id_with_screen(screen, args.id or 'Video')
     local path = args.path or nil
+    -- get_realpath = function(url, realsetting) return path or url; end
+    local get_realpath = args.get_realpath or nil
     local xwinwrap = args.xwinwrap or 'xwinwrap'
     local xargs    = args.xargs or {
         --'-d -st -ni -s -nf -b -un -argb -fs -fdt', -- -d, kill twice
@@ -274,11 +276,11 @@ function core.get_videowallpaper(screen, args)
     local g   = screen.geometry
     local cmd = string.format("%s -g %dx%d+%d+%d %s -- %s %s",
         xwinwrap, g.width, g.height, g.x, g.y, xargs_str, player, pargs_str)
+    util.print_info('video wallpaper cmd: ' .. cmd, id)
     if type(path) == 'string' then
         if (path:match('^http://') or path:match('^https://')
                 or gears.filesystem.file_readable(path)) then
-            cmd = string.format("%s '%s'", cmd, path)
-            util.print_info('video wallpaper cmd: ' .. cmd, id)
+            util.print_info('video wallpaper path: ' .. path, id)
             videowall.path = path
         else
             util.print_error('Lost video wallpaper: ' .. path, id)
@@ -288,6 +290,24 @@ function core.get_videowallpaper(screen, args)
     end
 
     --pid: https://awesomewm.org/doc/api/libraries/awful.spawn.html#easy_async_with_shell
+    local function realsetting(realpath)
+        local cmdline = string.format("%s '%s'", cmd, realpath)
+        util.print_info('Set video wallpaper cmdline: ' .. cmdline, id)
+        videowall.pid = spawn.easy_async_with_shell(cmdline,
+            function(stdout, stderr, reason, exit_code)
+                if exit_code == 0 then
+                    util.print_info('Exit VideoWallpaper without errors!', id)
+                    util.print_info('>> stdout: ' .. stdout, id)
+                    util.print_info('>> stderr: ' .. stderr, id)
+                else
+                    util.print_info('Faild to set VideoWallPaper! ' .. stderr, id)
+                    videowall.pid = nil
+                end
+            end
+        )
+        util.print_info('Set VideoWallpaper with PID: ' .. videowall.pid, id)
+    end
+
     local function setting()
         local script = 'echo'
         if after_prg ~= nil then
@@ -312,20 +332,11 @@ function core.get_videowallpaper(screen, args)
                         util.print_debug('Cannot find process: ' .. after_prg, id)
                     end
                 end
-                util.print_info('Setting VideoWallpaper: ' .. videowall.path, id)
-                videowall.pid = spawn.easy_async_with_shell(cmd,
-                    function(stdout, stderr, reason, exit_code)
-                        if exit_code == 0 then
-                            util.print_info('Exit VideoWallpaper without errors!', id)
-                            util.print_info('>> stdout: ' .. stdout, id)
-                            util.print_info('>> stderr: ' .. stderr, id)
-                        else
-                            util.print_info('Faild to set VideoWallPaper! ' .. stderr, id)
-                            videowall.pid = nil
-                        end
-                    end
-                )
-                util.print_info('Set VideoWallpaper with PID: ' .. videowall.pid, id)
+                if type(get_realpath) == 'function' then
+                    get_realpath(path, realsetting)
+                else
+                    realsetting(path)
+                end
             end)
         else
             videowall.pid = nil
