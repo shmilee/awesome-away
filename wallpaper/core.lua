@@ -308,7 +308,7 @@ function core.get_videowallpaper(screen, args)
         util.print_info('Set VideoWallpaper with PID: ' .. videowall.pid, id)
     end
 
-    local function setting()
+    local function videosetting()
         local script = 'echo'
         if after_prg ~= nil then
             script = string.format([[bash -c "
@@ -343,7 +343,10 @@ function core.get_videowallpaper(screen, args)
         end
     end
 
-    function videowall.update()
+    function videowall.kill_and_set(setting)
+        setting = setting or function()
+            videowall.pid = nil
+        end
         if videowall.pid ~= nil and videowall.pid > 1 then
             spawn.easy_async(string.format('kill %d', videowall.pid),
                 function(stdout, stderr, reason, exit_code)
@@ -368,6 +371,10 @@ function core.get_videowallpaper(screen, args)
         else
             setting()
         end
+    end
+
+    function videowall.update()
+        videowall.kill_and_set(videosetting)
     end
 
     function videowall.print_using()
