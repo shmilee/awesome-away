@@ -248,6 +248,8 @@ Battery
         --setting = function(battery) .... end,
     })
     battery:attach(battery.wicon)
+    -- add battery.observer.handlers to handle observer.status
+    --table.insert(battery.observer.handlers, function(observer, val) ... end)
 
 
 农历

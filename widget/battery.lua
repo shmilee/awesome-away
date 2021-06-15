@@ -11,6 +11,7 @@
 local util  = require("away.util")
 local core  = require("away.widget.core")
 local spawn = require("awful.spawn")
+local gears = require("gears")
 local beautiful = require("beautiful")
 local naughty = require("naughty")
 
@@ -126,12 +127,21 @@ local function worker(args)
                     }).id
                 end
             end
+            bat.observer.status = bat.now.status
+            bat.observer:emit_signal('property::status')
         end)
     end
 
     local bat = core.popup_worker(args)
-    bat.timer:emit_signal('timeout')
+    bat.observer = gears.object({class={}})
+    bat.observer.handlers = {}
+    bat.observer:connect_signal('property::status', function(obj, val)
+        for i, handler in pairs(bat.observer.handlers) do
+            handler(obj, val)
+        end
+    end)
 
+    bat.timer:emit_signal('timeout')
     return bat
 end
 
