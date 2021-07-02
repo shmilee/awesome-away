@@ -92,17 +92,18 @@ function base.worker(args)
     local icon_dir = args.icon_dir or util.curdir .. "widget/weather/"
     local get_info = args.get_info or function(weather, data) end
     local setting  = args.setting or nil -- function(weather) end
-
     args.timeout = args.timeout or 600 -- 10 min
     args.font    = args.font or nil
+
+    local query_str = {}
+    for i,v in pairs(query) do
+        table.insert(query_str, i .. '=' .. v)
+    end
+    query_str = table.concat(query_str, '&')
+    local cmd = string.format("%s '%s?%s'", curl, api, query_str)
+    util.print_info('update cmd: ' .. cmd, id)
+
     function args.update(weather)
-        local query_str = {}
-        for i,v in pairs(query) do
-            table.insert(query_str, i .. '=' .. v)
-        end
-        query_str = table.concat(query_str, '&')
-        local cmd = string.format("%s '%s?%s'", curl, api, query_str)
-        util.print_debug('update cmd: ' .. cmd, id)
         local h = tonumber(os.date('%H'))
         if h < 18 and h >= 6 then
             weather.icon_dir = icon_dir .. 'day/'
@@ -113,6 +114,9 @@ function base.worker(args)
             local data, pos, err = util.json.decode(stdout, 1, nil)
             if not err and type(data) == "table" then
                 get_info(weather, data)
+            else
+                util.print_error('Failed to get weather: ' .. err, id)
+                util.print_info(' ==> stdout: ' .. stdout, id)
             end
             if weather.now.wtype then
                 local icon = base.icon_table[weather.now.wtype]
