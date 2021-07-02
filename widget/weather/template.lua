@@ -20,7 +20,7 @@ local function get_XXXweather(args)
     args.id    = args.id or 'XXX'
     args.api   = args.api or 'http://'
     args.query = args.query or { cityid=101210101 }
-    args.curl  = args.curl or 'curl -f -s -m 1.7'
+    args.curl  = args.curl or 'curl -f -s -m 7'
 
     -- set weather.now {wtype, forecast, etc} for setting
     args.get_info  = args.get_info or function(weather, data)

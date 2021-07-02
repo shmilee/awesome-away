@@ -88,7 +88,7 @@ function base.worker(args)
     local id       = args.id or nil
     local api      = args.api or ''
     local query    = args.query or {}
-    local curl     = args.curl or 'curl -f -s -m 1.7'
+    local curl     = args.curl or 'curl -f -s -m 7'
     local icon_dir = args.icon_dir or util.curdir .. "widget/weather/"
     local get_info = args.get_info or function(weather, data) end
     local setting  = args.setting or nil -- function(weather) end

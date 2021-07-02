@@ -20,7 +20,7 @@ local function get_etouchweather(args)
     args.id    = args.id or 'etouch'
     args.api   = args.api or 'http://wthrcdn.etouch.cn/weather_mini'
     args.query = args.query or { citykey=101210101 }
-    args.curl  = args.curl or 'curl -f -s -m 1.7 --compressed'
+    args.curl  = args.curl or 'curl -f -s -m 7 --compressed'
 
     -- set weather.now {desc, city, wtype, wendu, forecast}
     args.get_info  = args.get_info or function(weather, data)

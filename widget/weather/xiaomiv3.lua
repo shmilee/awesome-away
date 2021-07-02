@@ -42,7 +42,7 @@ local function get_xiaomiv3weather(args)
         locale = 'zh_cn',
         days = 6,
     }
-    --args.curl  = args.curl or 'curl -f -s -m 1.7'
+    --args.curl  = args.curl or 'curl -f -s -m 7'
 
     -- set weather.now {wtype, wendu, aql, forecast, etc} for setting
     args.get_info  = args.get_info or function(weather, data)

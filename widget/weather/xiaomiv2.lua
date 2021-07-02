@@ -20,7 +20,7 @@ local function get_xiaomiv2weather(args)
     args.id    = args.id or 'xiaomiv2'
     args.api   = args.api or 'https://weatherapi.market.xiaomi.com/wtr-v2/weather'
     args.query = args.query or { cityId=101210101 }
-    --args.curl  = args.curl or 'curl -f -s -m 1.7'
+    --args.curl  = args.curl or 'curl -f -s -m 7'
 
     -- set weather.now {city, wtype, wendu, aql, forecast, etc} for setting
     args.get_info  = args.get_info or function(weather, data)

@@ -298,7 +298,7 @@ Weather
     weather = away.widget.weather['tianqi']({
         timeout = 600, -- 10 min
         query = weather_querys['tianqi'],
-        --curl = 'curl -f -s -m 1.7'
+        --curl = 'curl -f -s -m 7'
         --font ='Ubuntu Mono 12',
         --get_info = function(weather, data) end,
         --setting = function(weather) end,

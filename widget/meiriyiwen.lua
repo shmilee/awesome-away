@@ -21,7 +21,7 @@ local type = type
 local function worker(args)
     local args   = args or {}
     local api    = args.api or 'https://interface.meiriyiwen.com/article/today?dev=1'
-    local curl   = args.curl or 'curl -f -s -m 1.7'
+    local curl   = args.curl or 'curl -f -s -m 7'
     local cmd    = string.format("%s '%s'", curl, api)
     local setting = args.setting or function(data)
         util.print_debug('meiriyiwen: ' .. (data['data']['title'] or 'N/A'))

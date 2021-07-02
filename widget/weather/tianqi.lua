@@ -21,7 +21,7 @@ local function get_tianqiweather(args)
     args.id    = args.id or 'tianqi'
     args.api   = args.api or 'https://www.tianqiapi.com/api/'
     args.query = args.query or { version='v1' }
-    --args.curl  = args.curl or 'curl -f -s -m 1.7'
+    --args.curl  = args.curl or 'curl -f -s -m 7'
 
     -- set weather.now {city, wtype, wendu, aql, forecast, etc} for setting
     args.get_info  = args.get_info or function(weather, data)
