@@ -14,13 +14,16 @@ local base = require("away.widget.weather.base")
 local os = { date = os.date, time = os.time }
 local string = { gsub = string.gsub, format = string.format }
 
--- tianqi weather: fetch info from https://www.tianqiapi.com/
--- ref: https://www.jianshu.com/p/e3e04cf3fc0f#comment-34740340
+-- tianqi weather: fetch info from https://www.yiketianqi.com
+-- ref: http://doc.tianqiapi.com/603579
 local function get_tianqiweather(args)
     local args = args or {}
     args.id    = args.id or 'tianqi'
-    args.api   = args.api or 'https://www.tianqiapi.com/api/'
-    args.query = args.query or { version='v1' }
+    args.api   = args.api or 'https://www.yiketianqi.com/api'
+    args.query = args.query or {
+        version='v1', unescape=1,
+        appid=23035354, appsecret='8YvlPNrz',
+    }
     --args.curl  = args.curl or 'curl -f -s -m 7'
 
     -- set weather.now {city, wtype, wendu, aql, forecast, etc} for setting
@@ -28,40 +31,44 @@ local function get_tianqiweather(args)
         --util.print_debug('get weather info of ' .. data['city'], args.id)     
         if data['data'] then
             weather.now.city = data['city']
-            weather.now.wendu = data['data'][1]['tem']
-            weather.now.aql = base.aqi2apl(data['data'][1]['air'])
-            local wtype = data['data'][1]['wea']
-            --util.print_debug('get weather type ' .. wtype, args.id)
-            if wtype:match("转(.*)") then
-                -- current wea from data['data'][1]['hours']
-                local lt_wtype, lt_window = nil, {}
-                for i = 1, 3 do
-                    lt_window[i] = os.date('%d日%H时', os.time()+(i-1)*60*60)
-                end
-                for i = 1, #data['data'][1]['hours'] do
-                    for j = 1, #lt_window do
-                        if data['data'][1]['hours'][i]['day'] == lt_window[j] then
-                            lt_wtype = data['data'][1]['hours'][i]['wea']
-                            --util.print_debug('get weather type ' .. lt_wtype
-                            --    .. ' at ' .. lt_window[j], args.id)
-                            break
-                        end
-                    end
-                    if lt_wtype then
+            -- try current wea, tem from data['data'][1]['hours']
+            local wtype, wendu, lt_window = nil, nil, {}
+            for i = 1, 3 do
+                lt_window[i] = os.date('%H时', os.time()+(i-1)*60*60)
+            end
+            for i = 1, #data['data'][1]['hours'] do
+                for j = 1, #lt_window do
+                    if data['data'][1]['hours'][i]['hours'] == lt_window[j] then
+                        wtype = data['data'][1]['hours'][i]['wea']
+                        --util.print_debug('get weather type ' .. wtype
+                        --    .. ' at ' .. lt_window[j], args.id)
+                        wendu = data['data'][1]['hours'][i]['tem']
                         break
                     end
                 end
-                if lt_wtype then
-                    wtype = lt_wtype
-                else
-                    wtype = wtype:match("转(.*)")
-                    --util.print_debug('change weather type ' .. wtype, args.id)
+                if wtype then
+                    break
                 end
             end
+            -- default wea in data['data'][1]
+            if not wtype then
+                wtype = data['data'][1]['wea']
+            end
+            --util.print_debug('get weather type ' .. wtype, args.id)
+            if wtype:match("转(.*)") then
+                wtype = wtype:match("转(.*)")
+                --util.print_debug('change weather type ' .. wtype, args.id)
+            end
             weather.now.wtype = wtype
+            -- default wendu in data['data'][1]
+            if not wendu then
+                wendu = data['data'][1]['tem']
+            end
+            weather.now.wendu = wendu
+            weather.now.aql = base.aqi2apl(data['data'][1]['air'])
             -- forecast
             local data, now_forecast = data['data'], ''
-             for i = 1, #data do
+            for i = 1, #data do
                 local day  = data[i]['day']
                 local tmin = data[i]['tem2']
                 local tmax = data[i]['tem1']

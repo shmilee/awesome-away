@@ -278,7 +278,8 @@ Weather
             cityIds=101210101,
         },
         tianqi = {
-            version='v1',
+            version='v1', unescape=1,
+            appid=23035354, appsecret='8YvlPNrz',
             --cityid= 101210101, -- default weather by IP address
         },
         xiaomiv2 = {
