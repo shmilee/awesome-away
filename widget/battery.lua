@@ -25,7 +25,6 @@ local function worker(args)
     args.timeout = args.timeout or 10
     args.font    = args.font or nil
     local setting  = args.setting or function(bat)
-        local markup = util.markup_span_color
         -- setting, bat.now.{icon, text, notification_icon}
         -- need beautiful.{ac,bat,bat_low,bat_no}
         if bat.now.status == 'N/A' then
@@ -40,10 +39,10 @@ local function worker(args)
                 bat.now.text = " " .. bat.now.perc .. "% "
             elseif bat.now.perc > 15 then
                 bat.now.icon = beautiful.bat_low
-                bat.now.text = markup(" " .. bat.now.perc .. "% ", '#EB8F8F')
+                bat.now.text = util.markup_span(" " .. bat.now.perc .. "% ", '#EB8F8F')
             else
                 bat.now.icon = beautiful.bat_no
-                bat.now.text = markup(" " .. bat.now.perc .. "% ", "#D91E1E")
+                bat.now.text = util.markup_span(" " .. bat.now.perc .. "% ", "#D91E1E")
             end
             if bat.now.ac then
                 bat.now.icon = beautiful.ac

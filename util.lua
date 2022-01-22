@@ -91,18 +91,29 @@ function util.get_file_size(path)
     return size
 end
 
--- Set Markup foreground, background color
-function util.markup_span_color(text, fg, bg)
-    if fg and bg then
-        string.format('<span foreground="%s" background="%s">%s</span>',
-                      fg, bg, text)
-    elseif fg then
-        return string.format('<span foreground="%s">%s</span>', fg, text)
-    elseif  bg then
-        return string.format('<span background="%s">%s</span>', bg, text)
-    else
-        return text
+-- Set Markup foreground, background color and more, like font, size, etc.
+-- see https://docs.gtk.org/Pango/pango_markup.html#the-span-attributes
+function util.markup_span(text, fg, bg, more)
+    local attrs = {}
+    if fg then
+        table.insert(attrs, string.format('foreground="%s"', fg))
     end
+    if bg then
+        table.insert(attrs, string.format('background="%s"', fg))
+    end
+    more = more or {}
+    for i, v in pairs(more) do
+        table.insert(attrs, string.format('%s="%s"', i, v))
+    end
+    attrs = table.concat(attrs, ' ')
+    return string.format('<span %s>%s</span>', attrs, text)
+end
+
+-- Set Markup convenience Tags, like:
+-- b, big, i, s, u, etc.
+-- see https://docs.gtk.org/Pango/pango_markup.html#convenience-tags
+function util.markup(text, tag)
+    return string.format('<%s>%s</%s>', tag, text, tag)
 end
 
 return util

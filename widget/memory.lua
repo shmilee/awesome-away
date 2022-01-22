@@ -20,10 +20,9 @@ local function worker(args)
     local args   = args or {}
     args.timeout = args.timeout or 2
     local setting  = args.setting or function(mem)
-        local markup = util.markup_span_color
         -- setting, mem.now.text
         if mem.now.used / 1024 > 1 then
-            mem.now.text = markup(string.format("%.2fG(%.0f%%)", mem.now.used/1024, mem.now.perc), "#e0da37")
+            mem.now.text = util.markup_span(string.format("%.2fG(%.0f%%)", mem.now.used/1024, mem.now.perc), "#e0da37")
         else
             mem.now.text = string.format("%sM(%.0f%%)", mem.now.used, mem.now.perc)
         end
