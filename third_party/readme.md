@@ -28,5 +28,5 @@ widget/cal
 * url: https://github.com/lcpz/lain/blob/master/widget/cal.lua
 * usage: https://github.com/lcpz/lain/wiki/cal
 * ver: commit 5882000 on 31 Mar 2021
-
+* fix: replace lain.helper, lain.util.markup, add icons
 

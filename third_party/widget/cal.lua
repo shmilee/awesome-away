@@ -5,8 +5,7 @@
 
 --]]
 
-local helpers  = require("lain.helpers")
-local markup   = require("lain.util.markup")
+local util     = require("away.util")
 local awful    = require("awful")
 local naughty  = require("naughty")
 local floor    = math.floor
@@ -31,7 +30,7 @@ local function factory(args)
         followtag           = args.followtag or false,
         week_number         = args.week_number or "none",
         week_number_format  = args.week_number_format or args.week_number == "left" and "%3d | " or "| %-3d",
-        icons               = args.icons or helpers.icons_dir .. "cal/white/",
+        icons               = args.icons or util.curdir .. "third_party/widget/cal-white",
         notification_preset = args.notification_preset or {
             font = "Monospace 10", fg = "#FFFFFF", bg = "#000000"
         }
@@ -60,7 +59,7 @@ local function factory(args)
         local t = os.time { year = year or current_year, month = month and month+1 or current_month+1, day = 0 }
         local d = os.date("*t", t)
         local mth_days, st_day, this_month = d.day, (d.wday-d.day-cal.week_start+1)%7, os.date("%B %Y", t)
-        local notifytable = { [1] = string.format("%s%s\n", string.rep(" ", floor((28 - this_month:len())/2)), markup.bold(this_month)) }
+        local notifytable = { [1] = string.format("%s%s\n", string.rep(" ", floor((28 - this_month:len())/2)), util.markup(this_month, 'b')) }
         for x = 0,6 do notifytable[#notifytable+1] = os.date("%a", os.time { year=2006, month=1, day=x+cal.week_start }):sub(1, utf8.offset(1, 3)) .. " " end
         notifytable[#notifytable] = string.format("%s\n%s", notifytable[#notifytable]:sub(1, -2), string.rep(" ", st_day*4))
         local strx
@@ -68,7 +67,7 @@ local function factory(args)
             strx = x
             if x == today then
                 if x < 10 then x = " " .. x end
-                strx = markup.bold(markup.color(cal.notification_preset.bg, cal.notification_preset.fg, x) .. " ")
+                strx = util.markup(util.markup_span(cal.notification_preset.bg, cal.notification_preset.fg, x) .. " ", 'b')
             end
             strx = string.format("%s%s", string.rep(" ", 3 - tostring(x):len()), strx)
             notifytable[#notifytable+1] = string.format("%-4s%s", strx, (x+st_day)%7==0 and x ~= mth_days and "\n" or "")
