@@ -22,13 +22,6 @@ separators
 * usage: https://github.com/lcpz/lain/wiki/Utilities#separators
 * ver: commit c2ec8f2 on 29 Dec 2020
 
-widget/alsa
------------
-
-* url: https://github.com/lcpz/lain/blob/master/widget/alsa.lua
-* usage: https://github.com/lcpz/lain/wiki/alsa
-* ver: commit 4933d6c on 25 Sep 2021
-
 widget/cal
 ----------
 
