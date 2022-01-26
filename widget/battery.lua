@@ -12,7 +12,6 @@ local util  = require("away.util")
 local core  = require("away.widget.core")
 local spawn = require("awful.spawn")
 local gears = require("gears")
-local beautiful = require("beautiful")
 local naughty = require("naughty")
 
 local math   = { floor  = math.floor }
@@ -24,33 +23,9 @@ local function worker(args)
     local args   = args or {}
     args.timeout = args.timeout or 10
     args.font    = args.font or nil
+    local theme  = args.theme or {}
     local setting  = args.setting or function(bat)
-        -- setting, bat.now.{icon, text, notification_icon}
-        -- need beautiful.{ac,bat,bat_low,bat_no}
-        if bat.now.status == 'N/A' then
-            bat.now.icon = beautiful.ac
-            bat.now.text = ' N/A '
-        elseif bat.now.status == 'AC' then
-            bat.now.icon = beautiful.ac
-            bat.now.text = ' AC '
-        else
-            if bat.now.perc > 50 then
-                bat.now.icon = beautiful.bat
-                bat.now.text = " " .. bat.now.perc .. "% "
-            elseif bat.now.perc > 15 then
-                bat.now.icon = beautiful.bat_low
-                bat.now.text = util.markup_span(" " .. bat.now.perc .. "% ", '#EB8F8F')
-            else
-                bat.now.icon = beautiful.bat_no
-                bat.now.text = util.markup_span(" " .. bat.now.perc .. "% ", "#D91E1E")
-            end
-            if bat.now.ac then
-                bat.now.icon = beautiful.ac
-            end
-        end
-        bat.now.notification_icon = bat.now.icon
-        bat.wicon:set_image(bat.now.icon)
-        bat.wtext:set_markup(bat.now.text)
+        bat.set_now(bat) -- use default set_now
     end
 
     -- get now: {status, ac,
@@ -102,36 +77,66 @@ local function worker(args)
             bat.now.perc = math.floor(bat.now.energy_now / bat.now.energy_full + 0.5)
             bat.now.notification_text = string.format("<b>%s%%</b>:\n%s", bat.now.perc, notification)
             setting(bat)
-            -- notifications for low and critical states
-            if bat.now.status == "Discharging" then
-                if bat.now.perc <= 5 then
-                    bat.now.notification_id = naughty.notify({
-                        title   = "Battery exhausted",
-                        text    = "Shutdown imminent",
-                        icon    = beautiful.bat_no,
-                        timeout = 15,
-                        fg      = "#000000",
-                        bg      = "#FFFFFF",
-                        replaces_id = bat.now.notification_id,
-                    }).id
-                elseif bat.now.perc <= 15 then
-                    bat.now.notification_id = naughty.notify({
-                        title   = "Battery low",
-                        text    = "Plug the cable!",
-                        icon    = beautiful.bat_no,
-                        timeout = 15,
-                        fg      = "#202020",
-                        bg      = "#CDCDCD",
-                        replaces_id = bat.now.notification_id,
-                    }).id
-                end
-            end
             bat.observer.status = bat.now.status
             bat.observer:emit_signal('property::status')
         end)
     end
 
     local bat = core.popup_worker(args)
+
+    -- set now: {icon, text}, low and critical notification
+    -- need theme.{ac,bat,bat_low,bat_no} etc.
+    bat.set_now = args.set_now or function(bat)
+        if bat.now.status == 'N/A' then
+            bat.now.icon = theme.ac
+            bat.now.text = ' N/A '
+        elseif bat.now.status == 'AC' then
+            bat.now.icon = theme.ac
+            bat.now.text = ' AC '
+        else
+            if bat.now.perc > 50 then
+                bat.now.icon = theme.bat
+                bat.now.text = " " .. bat.now.perc .. "% "
+            elseif bat.now.perc > 15 then
+                bat.now.icon = theme.bat_low
+                bat.now.text = util.markup_span(" " .. bat.now.perc .. "% ", theme.bat_low_color or '#EB8F8F')
+            else
+                bat.now.icon = theme.bat_no
+                bat.now.text = util.markup_span(" " .. bat.now.perc .. "% ", theme.bat_no_color or "#D91E1E")
+            end
+            if bat.now.ac then
+                bat.now.icon = theme.ac
+            end
+        end
+        bat.wicon:set_image(bat.now.icon)
+        bat.wtext:set_markup(bat.now.text)
+        bat.now.notification_icon = bat.now.icon
+        -- notifications for low and critical states
+        if bat.now.status == "Discharging" then
+            if bat.now.perc <= 5 then
+                bat.now.notification_id = naughty.notify({
+                    title   = "Battery exhausted",
+                    text    = "Shutdown imminent",
+                    icon    = theme.bat_no,
+                    timeout = 15,
+                    fg      = "#000000",
+                    bg      = "#FFFFFF",
+                    replaces_id = bat.now.notification_id,
+                }).id
+            elseif bat.now.perc <= 15 then
+                bat.now.notification_id = naughty.notify({
+                    title   = "Battery low",
+                    text    = "Plug the cable!",
+                    icon    = theme.bat_no,
+                    timeout = 15,
+                    fg      = "#202020",
+                    bg      = "#CDCDCD",
+                    replaces_id = bat.now.notification_id,
+                }).id
+            end
+        end
+    end
+
     bat.observer = gears.object({class={}})
     bat.observer.handlers = {}
     bat.observer:connect_signal('property::status', function(obj, val)
