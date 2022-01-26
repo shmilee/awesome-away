@@ -16,6 +16,7 @@ local Gio        = require("lgi").Gio
 local awful_menu = require("awful.menu")
 local menu_gen   = require("menubar.menu_gen")
 local menu_utils = require("menubar.utils")
+local icon_theme = require("menubar.icon_theme")
 
 local io, pairs, string, table, os = io, pairs, string, table, os
 
@@ -59,6 +60,7 @@ end
 -- @return awful.menu
 function menu.build(args)
     local args       = args or {}
+    local icon_size  = args.icon_size
     local before     = args.before or {}
     local after      = args.after or {}
     local skip_items = args.skip_items or {}
@@ -111,6 +113,13 @@ function menu.build(args)
         for _, v in pairs(result) do _menu:add(v) end
         for _, v in pairs(after)  do _menu:add(v) end
     end)
+
+    -- Set category icon size
+    if icon_size then
+        for _,v in pairs(menu_gen.all_categories) do
+            v.icon = icon_theme():find_icon_path(v.icon_name, icon_size)
+        end
+    end
 
     -- Hold the menu in the module
     menu.menu = _menu
