@@ -80,7 +80,7 @@ function util.find_available_module(candidates)
 end
 
 util.json = util.find_available_module({
-    'cjson', 'dkjson', 'lain.util.dkjson',
+    'cjson', 'dkjson', 'away.third_party.dkjson',
 })
 
 -- Return path file size in bytes
@@ -99,7 +99,7 @@ function util.markup_span(text, fg, bg, more)
         table.insert(attrs, string.format('foreground="%s"', fg))
     end
     if bg then
-        table.insert(attrs, string.format('background="%s"', fg))
+        table.insert(attrs, string.format('background="%s"', bg))
     end
     more = more or {}
     for i, v in pairs(more) do

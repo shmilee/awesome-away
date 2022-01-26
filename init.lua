@@ -11,5 +11,6 @@
 return {
     wallpaper = require("away.wallpaper"),
     widget = require("away.widget"),
+    third_party = require("away.third_party"),
     util   = require("away.util"),
 }
