@@ -265,7 +265,7 @@ function core.get_videowallpaper(screen, args)
         '--hwdec=auto --hwdec-codecs=all',
         '--no-audio --no-osc --no-osd-bar --no-input-default-bindings',
         '--loop-file',
-        '--no-keepaspect',
+        --'--no-keepaspect',
     }
     local after_prg = args.after_prg or nil
     local timeout       = args.timeout or 0
