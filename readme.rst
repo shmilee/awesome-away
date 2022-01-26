@@ -9,7 +9,7 @@ Awesome Away
 Description
 -----------
 
-This module provides wallpapers, widgets and utilities for Awesome_ WM 4.x.
+This module provides wallpapers, widgets, themes and utilities for Awesome_ WM 4.x.
 Some partial widgets and utilities extracted from other repositories are also included in `./third_party`.
 
 
@@ -17,24 +17,33 @@ Dependencies
 ------------
 
 * curl_: download data with URL
-* dkjson_: decode json data
+* dkjson_: decode json data, included in `./third_party`
 * xwinwrap_: optional, for video wallpaper `away.wallpaper.get_videowallpaper`
 * mpv_: optional, for video wallpaper `away.wallpaper.get_videowallpaper`
 * you-get_: optional, for Bilibili video wallpaper `away.wallpaper.get_bilivideowallpaper`
+* alsa-utils_: optional, for `away.widget.alsa`
 * acpi_: optional, for `away.widget.battery`
 * sxtwl_: optional, for `away.widget.lunar`
 
-optional: install xwinwrap & mpv
-````````````````````````````````
+optional: install xwinwrap & mpv & you-get
+``````````````````````````````````````````
 
 .. code:: shell
 
     # archlinux
-    sudo pacman -S mpv
+    sudo pacman -S mpv you-get
     sudo yay -S xwinwrap-git
     # debian, ubuntu, etc
     sudo apt-get install mpv
     # install xwinwrap from source, see its homepage
+
+optional: install alsa-utils
+````````````````````````````
+
+.. code:: shell
+
+    sudo pacman -S alsa-utils # archlinux
+    sudo apt-get install alsa-utils # debian, ubuntu, etc
 
 optional: install acpi
 ```````````````````````
@@ -90,7 +99,7 @@ solo wallpaper
    wp.update() -- set next wallpaper
    wp.print_using() -- print using wallpaper
 
-* support `name`:
+* support name
    - `local`: Use images in the given dicrectory
    - `360chrome`: Fetch http://wallpaper.apc.360.cn/ images
    - `baidu`: Fetch http://image.baidu.com/ images
@@ -238,6 +247,24 @@ video wallpaper
 Widget Usage
 --------------
 
+ALSA
+`````
+
+.. code:: lua
+
+    volume = away.widget.alsa({
+        theme = theme, -- or beautiful
+        setting = function(volume)
+            volume.set_now(volume)
+            if volume.now.status == "off" then
+                os.execute(string.format("volnoti-show -m"))
+            else
+                os.execute(string.format("volnoti-show %s", volume.now.level))
+            end
+        end,
+        buttoncmds = { left="pavucontrol" },
+    })
+
 Battery
 ````````
 
@@ -252,6 +279,16 @@ Battery
     -- add battery.observer.handlers to handle observer.status
     --table.insert(battery.observer.handlers, function(observer, val) ... end)
 
+CPU
+`````
+
+.. code:: lua
+
+   _wcpu = away.widget.cpu({
+        theme = theme,
+        font = wfont,
+    })
+    _wcpu:attach(_wcpu.wicon)
 
 农历
 ````````
@@ -327,11 +364,51 @@ Memory
 .. code:: lua
 
     mem = away.widget.memory({
+        theme = theme,
         timeout = 2,
-        --settings = function(mem) end,
+        --setting = function(mem) end,
     })
-    mem.wicon:set_image(theme.mem)
 
+Thermal temp
+````````````
+.. code:: lua
+
+    _wtemp = away.widget.thermal({
+        theme = theme,
+        font = wfont,
+    })
+    _wtemp:attach(_wtemp.wicon)
+
+Theme: think
+--------------
+
+inherit **zenburn** theme, then add
+
+1. function theme.wallpaper(s)
+
+   + use `away.wallpaper`
+        - `os.getenv("HOME") .. "/.cache/wallpaper-bing"`
+        - `os.getenv("HOME") .. "/.cache/wallpaper-360chrome"`
+        - `os.getenv("HOME") .. "/.cache/wallpaper-wallhaven"`
+        - `os.getenv("HOME") .. "/.cache/wallpaper-lovebizhi"`
+        - online(like FY-4A) video wallpaper
+   + fallback
+        - think-1920x1200.jpg
+        - violin-1920x1080.jpg
+
+2. table theme.layouts for 4 screens
+3. table theme.tagnames for 4 screens
+4. Widgets from `away`, save to `theme.widgets`
+
+   + textclock, calendar
+   + lunar, weather, battery, volume: need dependencies_
+   + volume: also need pavucontrol, volnoti_
+   + systray, coretemp, cpu, mem
+5. function theme.createmywibox(s)
+6. fonts
+
+   + default: WenQuanYi Micro Hei
+   + widget: Ubuntu Mono
 
 .. _Awesome: https://github.com/awesomeWM/awesome
 .. _curl: https://curl.haxx.se/
@@ -339,5 +416,8 @@ Memory
 .. _xwinwrap: https://github.com/ujjwal96/xwinwrap
 .. _mpv: https://mpv.io/
 .. _you-get: https://www.soimort.org/you-get/
+.. _alsa-utils: https://www.alsa-project.org
 .. _acpi: https://sourceforge.net/projects/acpiclient/files/acpiclient/
 .. _sxtwl: https://github.com/yuangu/sxtwl_cpp
+.. _dependencies: https://github.com/shmilee/awesome-away#dependencies
+.. _volnoti: https://github.com/hcchu/volnoti
