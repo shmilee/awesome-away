@@ -237,7 +237,6 @@ local _wvolume = away.widget.alsa({
     end,
     buttoncmds = { left="pavucontrol" },
 })
-theme.wvolume = _wvolume
 -- 8. coretemp
 local _wtemp = away.widget.thermal({
     theme = theme,
@@ -261,6 +260,19 @@ local arrl_dl = separators.arrow_left(theme.bg_focus, "alpha")
 local arrl_ld = separators.arrow_left("alpha", theme.bg_focus)
 local arrr = separators.arrow_right(theme.bg_focus, "alpha")
 -- }}}
+
+theme.widgets = {
+    textclock = _wtextclock,
+    cal = _wcal,
+    lunar = _wlunar,
+    weather = _wweather,
+    systray = _wsystray, -- 5
+    battery = _wbattery,
+    volume = _wvolume,
+    temp = _wtemp,
+    cpu = _wcpu,
+    mem = _wmem, -- 10
+}
 
 function theme.createmywibox(s)
     if s.geometry.width > 1920 then
