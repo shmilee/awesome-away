@@ -1,11 +1,19 @@
 Partial widgets and utilities extracted from other repositories.
 
+dkjson
+------
+
+* url: http://dkolf.de/src/dkjson-lua.fsl/home
+* usage: http://dkolf.de/src/dkjson-lua.fsl/home
+* ver: Version 2.6 (2021-12-19)
+
 `freedesktop_menu`
 ------------------
 
 * url: https://github.com/lcpz/awesome-freedesktop/blob/master/menu.lua
 * usage: https://github.com/lcpz/awesome-freedesktop/wiki/Menu
 * ver: commit e4ac597 on 13 Apr 2021
+* fix: add category icons back
 
 revelation
 ----------
