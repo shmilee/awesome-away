@@ -18,11 +18,12 @@ local string = { format = string.format, match = string.match, gmatch = string.g
 -- Memory infos, aligned to htop, neofetch, free -h
 local function worker(args)
     local args   = args or {}
+    local theme = args.theme or {}
     args.timeout = args.timeout or 2
     local setting  = args.setting or function(mem)
         -- setting, mem.now.text
         if mem.now.used / 1024 > 1 then
-            mem.now.text = util.markup_span(string.format("%.2fG(%.0f%%)", mem.now.used/1024, mem.now.perc), "#e0da37")
+            mem.now.text = util.markup_span(string.format("%.2fG(%.0f%%)", mem.now.used/1024, mem.now.perc), theme.mem_high_color or "#e0da37")
         else
             mem.now.text = string.format("%sM(%.0f%%)", mem.now.used, mem.now.perc)
         end
@@ -61,6 +62,9 @@ local function worker(args)
     end
 
     local mem = core.worker(args)
+    if theme.mem then
+        mem.wicon:set_image(theme.mem)
+    end
     mem.timer:emit_signal('timeout')
 
     return mem
