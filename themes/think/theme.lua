@@ -5,9 +5,11 @@
 
 local away  = require("away")
 local awful = require("awful")
+local gears = require("gears")
 local wibox = require("wibox")
 local dpi   = require("beautiful").xresources.apply_dpi
 local gfs   = require("gears.filesystem")
+local hotkeys_popup = require("awful.hotkeys_popup")
 local os    = {
     date = os.date,
     time = os.time,
@@ -113,7 +115,8 @@ end
 -- }}}
 
 -- {{{ Styles
-theme.font      = "WenQuanYi Micro Hei " ..  dpi(9)
+theme.thefont = "WenQuanYi Micro Hei"
+theme.font = "WenQuanYi Micro Hei " ..  dpi(10)
 -- }}}
 
 -- {{{ Widgets
@@ -138,11 +141,6 @@ theme.vol_no      = theme.dir .. "/widgets/vol_no.png"
 theme.widget_bg   = theme.dir .. "/widgets/widget_bg.png"
 -- }}}
 
--- {{{ Menu
-theme.menu_height = dpi(18)
-theme.menu_width  = dpi(100)
--- }}}
-
 -- {{{ Misc
 theme.awesome_icon      = theme.dir .. "/misc/arch-icon.png"
 theme.capslock_on       = theme.dir .. "/misc/capslock_on.png"
@@ -152,6 +150,41 @@ theme.touchpad_off      = theme.dir .. "/misc/touchpad_off.png"
 --theme.icon_theme = "Adwaita"
 theme.icon_theme = "Faenza"
 theme.client_rounded_radius =  dpi(8)
+-- }}}
+
+-- {{{ Menu
+theme.menu_height = dpi(20)
+theme.menu_width  = dpi(120)
+theme.terminal = "xfce4-terminal"
+theme.editor = os.getenv("EDITOR") or "vim"
+theme.editor_cmd = theme.terminal .. " -e '" .. theme.editor .. " %s '"
+theme.awesomemenu = {
+    { "Awesome", {
+        { "hotkeys", function()
+            hotkeys_popup.show_help(nil, awful.screen.focused())
+        end },
+        { "this bing", function()
+            local s = awful.screen.focused()
+            if s.miscwallpaper then
+                s.miscwallpaper.print_using()
+            end
+        end },
+        { "next bing", function()
+            local s = awful.screen.focused()
+            if s.miscwallpaper then
+                s.miscwallpaper.update()
+            end
+        end },
+        { "manual", theme.terminal .. " -e 'man awesome'" },
+        { "edit config", string.format(theme.editor_cmd, awesome.conffile) },
+        { "restart", awesome.restart },
+        { "quit", function() awesome.quit() end }
+    }, theme.awesome_icon }
+}
+theme.custommenu = {
+    { "Terminal (&T)", theme.terminal, away.menu.find_icon('terminal', theme.icon_theme) },
+    { "Firefox (&B)", "firefox", away.menu.find_icon('firefox', theme.icon_theme) },
+}
 -- }}}
 
 -- {{{ Layout
@@ -274,16 +307,105 @@ theme.widgets = {
     mem = _wmem, -- 10
 }
 
+-- {{{ Buttons
+theme.root_buttons = gears.table.join(
+    awful.button({ }, 3, function ()
+        local s = awful.screen.focused()
+        s.mymainmenu:toggle()
+    end),
+    awful.button({ }, 4, awful.tag.viewnext),
+    awful.button({ }, 5, awful.tag.viewprev)
+)
+theme.taglist_buttons = gears.table.join(
+    awful.button({ }, 1, function(t) t:view_only() end),
+    awful.button({ modkey }, 1, function(t)
+                              if client.focus then
+                                  client.focus:move_to_tag(t)
+                              end
+                          end),
+    awful.button({ }, 3, awful.tag.viewtoggle),
+    awful.button({ modkey }, 3, function(t)
+                              if client.focus then
+                                  client.focus:toggle_tag(t)
+                              end
+                          end),
+    awful.button({ }, 4, function(t) awful.tag.viewnext(t.screen) end),
+    awful.button({ }, 5, function(t) awful.tag.viewprev(t.screen) end)
+)
+theme.tasklist_buttons = gears.table.join(
+    awful.button({ }, 1, function (c)
+        if c == client.focus then
+            c.minimized = true
+        else
+            c:emit_signal("request::activate", "tasklist", {raise = true})
+        end
+    end),
+    awful.button({ }, 3, function()
+        local s = awful.screen.focused()
+        awful.menu.client_list({ theme = {
+            width = s.geometry.width*0.678,
+            height = dpi(20, s),
+            font = theme.thefont .. " " .. dpi(12, s),
+        }})
+    end),
+    awful.button({ }, 4, function () awful.client.focus.byidx(1) end),
+    awful.button({ }, 5, function () awful.client.focus.byidx(-1) end)
+)
+theme.layoutbox_buttons = gears.table.join(
+    awful.button({ }, 1, function () awful.layout.inc( 1) end),
+    awful.button({ }, 3, function () awful.layout.inc(-1) end),
+    awful.button({ }, 4, function () awful.layout.inc( 1) end),
+    awful.button({ }, 5, function () awful.layout.inc(-1) end)
+)
+-- }}}
+
 function theme.createmywibox(s)
     if s.geometry.width > 1920 then
         s.dpi = math.floor(s.geometry.width/1920*96)
     end
-    s.mywibox = awful.wibar({ position = "top", screen = s, height =  dpi(20,s), opacity = 0.88 })
 
+    -- Wallpaper
+    gears.wallpaper.maximized(theme.wallpaper(s), s, true)
+    -- Create a launcher widget and a main menu for each screen
+    away.menu.use_zh_CN()
+    s.mymainmenu = away.menu:generate({
+        before = theme.awesomemenu, after = theme.custommenu,
+        theme = {
+            height = dpi(20, s), width = dpi(120, s),
+            font = theme.thefont .. " " .. dpi(12, s),
+        },
+    })
+    s.mylauncher = awful.widget.launcher({
+        image = theme.awesome_icon, menu = s.mymainmenu
+    })
+    -- Each screen has its own tag table.
+    awful.tag(theme.tagnames[s.index], s, theme.layouts[s.index])
+    -- Create a taglist widget
+    s.mytaglist = awful.widget.taglist {
+        screen  = s,
+        filter  = awful.widget.taglist.filter.all,
+        buttons = theme.taglist_buttons
+    }
+    -- Create a promptbox for each screen
+    s.mypromptbox = awful.widget.prompt()
+    -- Create a tasklist widget
+    s.mytasklist = awful.widget.tasklist {
+        screen  = s,
+        filter  = awful.widget.tasklist.filter.currenttags,
+        buttons = theme.tasklist_buttons
+    }
+
+    -- Create the wibox
+    s.mywibox = awful.wibar({ position = "top", screen = s, height =  dpi(20,s), opacity = 0.88 })
+    -- Create right widgets
     s.mywibox.rightwidgets = {
         layout = wibox.layout.fixed.horizontal,
         --mykeyboardlayout,
     }
+    -- layoutbox per screen.
+    s.mylayoutbox = awful.widget.layoutbox(s)
+    s.mylayoutbox:buttons(theme.layoutbox_buttons)
+    -- videowallpaper, _wbattery
     if s.videowallpaper then
         table.insert(_wbattery.observer.handlers, function(observer, val)
             if observer.status == 'Discharging' then
@@ -291,8 +413,8 @@ function theme.createmywibox(s)
             end
         end)
     end
-    -- add widgets
-    s.mywibox.enablewidgets = {
+    -- group all widgets
+    local enablewidgets = {
         {_wmem.wicon, _wmem.wtext},
         {_wcpu.wicon, _wcpu.wtext},
         {_wtemp.wicon, _wtemp.wtext},
@@ -304,7 +426,7 @@ function theme.createmywibox(s)
     }
     local right_layout_toggle = true
     local wg, w
-    for _, wg in ipairs(s.mywibox.enablewidgets) do
+    for _, wg in ipairs(enablewidgets) do
         if right_layout_toggle then
             table.insert(s.mywibox.rightwidgets, arrl_ld)
             for _, w in ipairs(wg) do
@@ -324,7 +446,7 @@ function theme.createmywibox(s)
         layout = wibox.layout.align.horizontal,
         { -- Left widgets
             layout = wibox.layout.fixed.horizontal,
-            mylauncher,
+            s.mylauncher,
             s.mytaglist,
             arrr,
             s.mypromptbox,
