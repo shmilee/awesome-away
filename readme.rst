@@ -396,16 +396,28 @@ inherit **zenburn** theme, then add
         - think-1920x1200.jpg
         - violin-1920x1080.jpg
 
-2. table theme.layouts for 4 screens
-3. table theme.tagnames for 4 screens
-4. Widgets from `away`, save to `theme.widgets`
+2. menu
+
+   + terminal: xfce4-terminal
+   + editor: vim
+   + firefox
+
+3. table theme.layouts for 4 screens
+4. table theme.tagnames for 4 screens
+5. Widgets from `away`, save to `theme.widgets`
 
    + textclock, calendar
    + lunar, weather, battery, volume: need dependencies_
    + volume: also need pavucontrol, volnoti_
    + systray, coretemp, cpu, mem
-5. function theme.createmywibox(s)
-6. fonts
+
+6. function theme.createmywibox(s)
+
+   + wallpaper, mainmenu, taglist, promptbox, tasklist, widgets
+   + theme.height etc. for mainmenu, tasklist
+   + different dpi for each screen
+
+7. fonts
 
    + default: WenQuanYi Micro Hei
    + widget: Ubuntu Mono
