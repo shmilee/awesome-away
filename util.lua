@@ -8,7 +8,7 @@
 --
 ---------------------------------------------------------------------------
 
-local io, debug, table = io, debug, table
+local io, os, debug, table = io, os, debug, table
 local print, tostring, pairs, pcall, require
     = print, tostring, pairs, pcall, require
 local string = { format = string.format }
@@ -32,7 +32,8 @@ function util.print_msg(level, leveltxt, msg, msgprefix)
         else
             msgprefix = ''
         end
-        msg = "Away: " .. leveltxt .. ' ' .. msgprefix .. tostring(msg)
+        T = os.date('%F %H:%M:%S')
+        msg = T .. " Away" .. leveltxt .. ': ' .. msgprefix .. tostring(msg)
         if util.log_std == 'stderr' then
             io.stderr:write(msg .. '\n')
             io.flush()
