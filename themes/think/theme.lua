@@ -158,6 +158,8 @@ theme.menu_width  = dpi(120)
 theme.terminal = "xfce4-terminal"
 theme.editor = os.getenv("EDITOR") or "vim"
 theme.editor_cmd = theme.terminal .. " -e '" .. theme.editor .. " %s '"
+away.menu.init({ icon_theme=theme.icon_theme })
+away.menu.menubar_nice_category_name()
 theme.awesomemenu = {
     { "Awesome", {
         { "hotkeys", function()
@@ -182,8 +184,8 @@ theme.awesomemenu = {
     }, theme.awesome_icon }
 }
 theme.custommenu = {
-    { "Terminal (&T)", theme.terminal, away.menu.find_icon('terminal', theme.icon_theme) },
-    { "Firefox (&B)", "firefox", away.menu.find_icon('firefox', theme.icon_theme) },
+    { "Terminal (&T)", theme.terminal, away.menu.find_icon('terminal') },
+    { "Firefox (&B)", "firefox", away.menu.find_icon('firefox') },
 }
 -- }}}
 
@@ -345,7 +347,7 @@ theme.tasklist_buttons = gears.table.join(
         awful.menu.client_list({ theme = {
             width = s.geometry.width*0.678,
             height = dpi(20, s),
-            font = theme.thefont .. " " .. dpi(12, s),
+            font = s.mymainmenu.menu_font,
         }})
     end),
     awful.button({ }, 4, function () awful.client.focus.byidx(1) end),
@@ -367,14 +369,17 @@ function theme.createmywibox(s)
     -- Wallpaper
     gears.wallpaper.maximized(theme.wallpaper(s), s, true)
     -- Create a launcher widget and a main menu for each screen
-    away.menu.use_zh_CN()
-    s.mymainmenu = away.menu:generate({
+    local menu_font = theme.thefont
+    if s.dpi < 128 then
+        menu_font = theme.thefont .. " " .. dpi(12, s)
+    end
+    s.mymainmenu = away.menu({
         before = theme.awesomemenu, after = theme.custommenu,
         theme = {
-            height = dpi(20, s), width = dpi(120, s),
-            font = theme.thefont .. " " .. dpi(12, s),
+            height = dpi(20, s), width = dpi(120, s), font = menu_font,
         },
     })
+    s.mymainmenu.menu_font = menu_font
     s.mylauncher = awful.widget.launcher({
         image = theme.awesome_icon, menu = s.mymainmenu
     })
