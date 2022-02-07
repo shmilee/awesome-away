@@ -12,9 +12,9 @@ local awful = require("awful")
 local menubar = require("menubar")
 local mb_icon_theme = require("menubar.icon_theme")
 local utilloaded, util = pcall(require, "away.util")
-local pairs, setmetatable = pairs, setmetatable
+local pairs, type, setmetatable = pairs, type, setmetatable
 local table = { insert=table.insert, sort=table.sort }
-local string = { byte=string.byte }
+local string = { byte=string.byte, format = string.format }
 
 -- @attr osi_wm_name: Name of the WM for the OnlyShowIn entry
 -- @attr items: table items for awful.menu
@@ -72,6 +72,7 @@ function awaymenu._parse_entries(entries)
     for _, v in pairs(entries) do
         if _items[v.category] ~= nil then
             table.insert(_items[v.category][2], { v.name, v.cmdline, v.icon })
+            util.print_debug(string.format('Entry: %s,%s, %s, %s', v.name, v.cmdline, v.icon, v.Name))
         end
     end
     local items = {}
@@ -114,28 +115,75 @@ function awaymenu.init(args)
     end)
 end
 
+-- add menu theme for each entry, even entries in submenu
+-- fix multi screens with different dpi and menu width, height, etc.
+-- ref: awful.menu:add(args,..) args.theme;
+-- ref: awful.menu:exec(num, ...), menu.new(cmd, self), cmd is table, add cmd.theme
+-- @param items table of entry { text, cmd, icon }. If cmd is table, it is sub-items
+-- @param theme menu theme, like { width=120, height=20, etc. }
+-- @return new items table
+function awaymenu._copy_add_sub_theme(items, theme)
+    local newit = {}
+    for k, _oldv in pairs(items) do
+        local v = {} -- copy _oldv
+        for i, _ov in pairs(_oldv) do
+            v[i] = _ov
+        end
+        local cmd = v[2] or v.cmd
+        if utilloaded then
+            util.print_debug(string.format("k=%s, text=%s, cmd=%s, icon=%s",
+                k, v[1] or v.text, cmd, v[3] or v.icon))
+        end
+        if type(cmd) == "table" then
+            cmd = awaymenu._copy_add_sub_theme(cmd, theme)
+        end
+        if v[2] ~= nil then
+            v[2] = cmd
+        else
+            v.cmd = cmd
+        end
+        v.theme = theme -- add theme
+        --util.print_debug(string.format("k=%s, text=%s: height=%s, width=%s, font=%s",
+        --    k, v[1] or v.text, theme.height, theme.width, theme.font))
+        newit[k] = v
+    end
+    return newit
+end
+
 -- Generate a away menupopup if needed
 function awaymenu:_generate()
     if self.awful_menupopup == nil or not self.complete then
-        self.awful_menupopup = awful.menu({
-            items = self.before, theme=self.theme })
-        local items = awaymenu.items or {
-            { "menu items?", function() end },
-        }
+        if utilloaded then
+            util.print_info(string.format(
+                'Get menupopup theme: height=%s, width=%s, font=%s',
+                self.theme.height, self.theme.width, self.theme.font
+            ))
+            util.print_info("Adding theme to all entries ...")
+        end
+        local before = awaymenu._copy_add_sub_theme(self.before, self.theme)
+        local items = awaymenu._copy_add_sub_theme(awaymenu.items or {
+                { "menu items?", function() end },
+            }, self.theme)
+        local after = awaymenu._copy_add_sub_theme(self.after, self.theme)
         if awaymenu.items ~= nil then
             self.complete = true
             if utilloaded then
-                util.print_debug('Generating complete menupopup ...')
+                util.print_info('Generating complete menupopup ...')
             end
         else
             if utilloaded then
-                util.print_debug('Generating incomplete menupopup ...')
+                util.print_info('Generating incomplete menupopup ...')
             end
         end
+        if self.awful_menupopup ~= nil then -- incomplete existing one
+            self.awful_menupopup:hide()
+            self.awful_menupopup = nil
+        end
+        self.awful_menupopup = awful.menu({ items=before, theme=self.theme })
         for _, v in pairs(items) do
             self.awful_menupopup:add(v)
         end
-        for _, v in pairs(self.after) do
+        for _, v in pairs(after) do
             self.awful_menupopup:add(v)
         end
         setmetatable(self, self.awful_menupopup)
