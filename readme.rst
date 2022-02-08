@@ -379,6 +379,29 @@ Thermal temp
     })
     _wtemp:attach(_wtemp.wicon)
 
+
+menu
+----
+
+.. code:: lua
+
+    away.menu.init({
+        osi_wm_name="",      -- Name of the WM for the OnlyShowIn entry
+        icon_theme=nil,      -- icon theme for application icons
+        categories_name=nil, -- category name with nice name
+    })
+    -- away.menu.menubar_nice_category_name()
+    local dpi = require("beautiful").xresources.apply_dpi
+    -- mainmenu for each screen
+    s.mymainmenu = away.menu({
+        before=thinktheme.awesomemenu(), -- items before freedesktop.org menu
+        after=thinktheme.custommenu(),   -- items after freedesktop.org menu
+        theme={ -- set menu item height, width, font for each screen
+            height=dpi(20, s), width=dpi(120, s), font=nil,
+        },
+    })
+
+
 Theme: think
 --------------
 
@@ -398,7 +421,7 @@ inherit **zenburn** theme, then add
 
 2. menu
 
-   + terminal: xfce4-terminal
+   + terminal: xterm
    + editor: vim
    + firefox
 

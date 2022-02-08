@@ -155,38 +155,44 @@ theme.client_rounded_radius =  dpi(8)
 -- {{{ Menu
 theme.menu_height = dpi(20)
 theme.menu_width  = dpi(120)
-theme.terminal = "xfce4-terminal"
+theme.terminal = "xterm"
 theme.editor = os.getenv("EDITOR") or "vim"
-theme.editor_cmd = theme.terminal .. " -e '" .. theme.editor .. " %s '"
+theme.editor_cmd = theme.terminal .. " -e '" .. theme.editor .. " %s'"
 away.menu.init({ icon_theme=theme.icon_theme })
 away.menu.menubar_nice_category_name()
-theme.awesomemenu = {
-    { "Awesome", {
-        { "hotkeys", function()
-            hotkeys_popup.show_help(nil, awful.screen.focused())
-        end },
-        { "this bing", function()
-            local s = awful.screen.focused()
-            if s.miscwallpaper then
-                s.miscwallpaper.print_using()
-            end
-        end },
-        { "next bing", function()
-            local s = awful.screen.focused()
-            if s.miscwallpaper then
-                s.miscwallpaper.update()
-            end
-        end },
-        { "manual", theme.terminal .. " -e 'man awesome'" },
-        { "edit config", string.format(theme.editor_cmd, awesome.conffile) },
-        { "restart", awesome.restart },
-        { "quit", function() awesome.quit() end }
-    }, theme.awesome_icon }
-}
-theme.custommenu = {
-    { "Terminal (&T)", theme.terminal, away.menu.find_icon('terminal') },
-    { "Firefox (&B)", "firefox", away.menu.find_icon('firefox') },
-}
+function theme.awesomemenu()
+    return { {
+        "Awesome",
+        {
+            { "hotkeys", function()
+                hotkeys_popup.show_help(nil, awful.screen.focused())
+            end },
+            { "this bing", function()
+                local s = awful.screen.focused()
+                if s.miscwallpaper then
+                    s.miscwallpaper.print_using()
+                end
+            end },
+            { "next bing", function()
+                local s = awful.screen.focused()
+                if s.miscwallpaper then
+                    s.miscwallpaper.update()
+                end
+            end },
+            { "manual", theme.terminal .. " -e 'man awesome'" },
+            { "edit config", string.format(theme.editor_cmd, awesome.conffile) },
+            { "restart", awesome.restart },
+            { "quit", function() awesome.quit() end }
+        },
+        theme.awesome_icon,
+    } }
+end
+function theme.custommenu()
+    return {
+        { "Terminal (&T)", theme.terminal, away.menu.find_icon('terminal') },
+        { "Firefox (&B)", "firefox", away.menu.find_icon('firefox') },
+    }
+end
 -- }}}
 
 -- {{{ Layout
@@ -374,7 +380,7 @@ function theme.createmywibox(s)
         menu_font = theme.thefont .. " " .. dpi(12, s)
     end
     s.mymainmenu = away.menu({
-        before = theme.awesomemenu, after = theme.custommenu,
+        before = theme.awesomemenu(), after = theme.custommenu(),
         theme = {
             height = dpi(20, s), width = dpi(120, s), font = menu_font,
         },
