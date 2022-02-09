@@ -61,7 +61,7 @@ local function worker(args)
                 ly = Gan[ld.Lyear2.tg+1] .. Zhi[ld.Lyear2.dz+1] .. "年",
                 lm = Gan[ld.Lmonth2.tg+1] .. Zhi[ld.Lmonth2.dz+1] .. "月",
                 ld = Gan[ld.Lday2.tg+1] .. Zhi[ld.Lday2.dz+1] .. "日",
-                jq = jqmc[ld.qk+1] or '', -- 节气，不存在则为jqmc[0] -> ''
+                jq = jqmc[ld.qk+1], -- 节气，不存在则为jqmc[0] -> nil
                 cur_dz = ld.cur_dz,
                 cur_xz = ld.cur_xz,
                 cur_lq = ld.cur_lq,
@@ -76,13 +76,16 @@ local function worker(args)
                 now.icon = nil
                 now.text = now.month .. now.day
                 now.notification_icon = nil
+                local notitext = now.text
+                if now.jq then
+                    notitext = notitext .. ', ' .. now.jq
+                end
                 now.notification_text =  string.format(
-                    '<b>%s</b>\n公历: %s年%s月%s日\n%s\n节气: %s\n距冬至%s天\n距夏至%s天\n距立秋%s天',
-                    now.text,
+                    '<b>%s</b>\n公历: %s年%s月%s日\n%s\n距冬至%s天\n距夏至%s天\n距立秋%s天',
+                    notitext,
                     now.y, now.m, now.d,
                     now.ly .. now.lm .. now.ld,
-                    now.jq,
-                    now.cur_dz, now.cur_xz, now.cur_lq)
+                    -now.cur_dz, -now.cur_xz, -now.cur_lq)
             end
             if lunar.now.icon then
                 lunar.wicon:set_image(lunar.now.icon)
