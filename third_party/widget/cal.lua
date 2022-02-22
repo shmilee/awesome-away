@@ -30,7 +30,7 @@ local function factory(args)
         followtag           = args.followtag or false,
         week_number         = args.week_number or "none",
         week_number_format  = args.week_number_format or args.week_number == "left" and "%3d | " or "| %-3d",
-        icons               = args.icons or util.curdir .. "third_party/widget/cal-white",
+        icons               = args.icons or util.curdir .. "third_party/widget/cal-white/",
         notification_preset = args.notification_preset or {
             font = "Monospace 10", fg = "#FFFFFF", bg = "#000000"
         }
