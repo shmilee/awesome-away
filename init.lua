@@ -13,5 +13,6 @@ return {
     widget = require("away.widget"),
     third_party = require("away.third_party"),
     menu = require("away.menu"),
+    xrandr = require("away.xrandr"),
     util   = require("away.util"),
 }
