@@ -10,7 +10,7 @@ local wibox = require("wibox")
 local dpi   = require("beautiful").xresources.apply_dpi
 local gfs   = require("gears.filesystem")
 local hotkeys_popup = require("awful.hotkeys_popup")
-local os    = {
+local os = {
     date = os.date,
     time = os.time,
     setlocale = os.setlocale,
@@ -31,23 +31,9 @@ theme.wallpaper_fallback = {
     theme.dir .. "/violin-1920x1080.jpg",
 }
 
-function theme.set_videowall(s, i)
+function theme.get_miscwall(s, i)
     if i == 1 then
-        --http://fy4.nsmc.org.cn/portal/cn/theme/FY4A.html
-        s.videowallpaper = away.wallpaper.get_videowallpaper(s, {
-            -- 3h, 6h, 12h, 24h, 48h, 72h
-            path = 'http://img.nsmc.org.cn/CLOUDIMAGE/FY4A/MTCC/VIDEO/FY4A.disk.24h.mp4',
-            timeout = 3600*12,
-        })
-    else
-        return nil
-    end
-end
-
-function theme.wallpaper(s)
-    -- screen 1
-    if s.index % 2 == 1 then
-        s.miscwallpaper = away.wallpaper.get_miscwallpaper(s, { timeout=300 }, {
+        return away.wallpaper.get_miscwallpaper(s, { timeout=300 }, {
             {
                 name = 'bing', weight = 2,
                 args = {
@@ -76,11 +62,8 @@ function theme.wallpaper(s)
                 },
             },
         })
-        theme.set_videowall(s, 1)
-        return theme.wallpaper_fallback[1]
-    -- screen 2
-    else
-        s.miscwallpaper = away.wallpaper.get_miscwallpaper(s, { timeout=300, random=true, update_by_tag=false }, {
+    elseif i == 2 then
+        return away.wallpaper.get_miscwallpaper(s, { timeout=300, random=true, update_by_tag=false }, {
             {
                 name = '360chrome', weight = 2,
                 --args = {},
@@ -108,15 +91,47 @@ function theme.wallpaper(s)
                 },
             },
         })
-        theme.set_videowall(s, 2)        
-        return theme.wallpaper_fallback[2]
+    else
+        return nil
     end
+end
+
+function theme.get_videowall(s, i)
+    if i == 1 then
+        --http://fy4.nsmc.org.cn/portal/cn/theme/FY4A.html
+        return away.wallpaper.get_videowallpaper(s, {
+            -- 3h, 6h, 12h, 24h, 48h, 72h
+            path = 'http://img.nsmc.org.cn/CLOUDIMAGE/FY4A/MTCC/VIDEO/FY4A.disk.24h.mp4',
+            timeout = 3600*12,
+        })
+    else
+        return nil
+    end
+end
+
+function theme.wallpaper(s)
+    local index = s.index % 2
+    if index == 0 then
+        -- screen 2, 4, 6
+        index = 2
+    end
+    if s.miscwallpaper then
+        s.miscwallpaper.update()
+    else
+        s.miscwallpaper = theme.get_miscwall(s, index)
+    end
+    if s.videowallpaper then
+        s.videowallpaper.update()
+    else
+        s.videowallpaper = theme.get_videowall(s, index)
+    end
+    return theme.wallpaper_fallback[index]
 end
 -- }}}
 
 -- {{{ Styles
 theme.thefont = "WenQuanYi Micro Hei"
-theme.font = "WenQuanYi Micro Hei " ..  dpi(10)
+theme.font = "WenQuanYi Micro Hei 12"
 -- }}}
 
 -- {{{ Widgets
@@ -160,6 +175,9 @@ theme.editor = os.getenv("EDITOR") or "vim"
 theme.editor_cmd = theme.terminal .. " -e '" .. theme.editor .. " %s'"
 away.menu.init({ icon_theme=theme.icon_theme })
 away.menu.menubar_nice_category_name()
+function theme.xrandr_menu()
+    return away.xrandr({})
+end
 function theme.awesomemenu()
     return { {
         "Awesome",
@@ -179,6 +197,7 @@ function theme.awesomemenu()
                     s.miscwallpaper.update()
                 end
             end },
+            { "xrandr", theme.xrandr_menu() },
             { "manual", theme.terminal .. " -e 'man awesome'" },
             { "edit config", string.format(theme.editor_cmd, awesome.conffile) },
             { "restart", awesome.restart },
@@ -227,7 +246,7 @@ theme.tagnames = {
 -- }}}
 
 -- {{{ Create Widgets
-local wfont = 'Ubuntu Mono '
+local wfont = 'Ubuntu Mono 14'
 -- 1. textclock widget
 local _wtextclock = wibox.widget.textclock(" %H:%M:%S ",1)
 -- 2. calendar
@@ -367,18 +386,27 @@ theme.layoutbox_buttons = gears.table.join(
 )
 -- }}}
 
-function theme.createmywibox(s)
+function theme.set_dpi(s)
     if s.geometry.width > 1920 then
         s.dpi = math.floor(s.geometry.width/1920*96)
+    else
+        s.dpi = 96
     end
+    away.xrandr.read_set_dpi(function(dpi)
+        if s.dpi < dpi then
+            s.dpi = dpi
+        end
+    end)
+end
 
+function theme.createmywibox(s)
+    -- DPI
+    theme.set_dpi(s)
     -- Wallpaper
     gears.wallpaper.maximized(theme.wallpaper(s), s, true)
     -- Create a launcher widget and a main menu for each screen
-    local menu_font = theme.thefont
-    if s.dpi < 128 then
-        menu_font = theme.thefont .. " " .. dpi(12, s)
-    end
+    local menu_font = theme.font
+    --local menu_font = theme.thefont .. " 15"
     s.mymainmenu = away.menu({
         before = theme.awesomemenu(), after = theme.custommenu(),
         theme = {
@@ -395,7 +423,8 @@ function theme.createmywibox(s)
     s.mytaglist = awful.widget.taglist {
         screen  = s,
         filter  = awful.widget.taglist.filter.all,
-        buttons = theme.taglist_buttons
+        buttons = theme.taglist_buttons,
+        --style   = { font=theme.font }
     }
     -- Create a promptbox for each screen
     s.mypromptbox = awful.widget.prompt()
@@ -403,7 +432,8 @@ function theme.createmywibox(s)
     s.mytasklist = awful.widget.tasklist {
         screen  = s,
         filter  = awful.widget.tasklist.filter.currenttags,
-        buttons = theme.tasklist_buttons
+        buttons = theme.tasklist_buttons,
+        --style   = { font=theme.font }
     }
 
     -- Create the wibox
