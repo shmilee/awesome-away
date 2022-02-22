@@ -13,7 +13,6 @@ local core  = require("away.widget.core")
 local awful  = require("awful")
 local gears  = require("gears")
 local string = { match = string.match, format = string.format }
-local os = { execute = os.execute }
 
 -- ALSA volume
 local function worker(args)

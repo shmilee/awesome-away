@@ -15,7 +15,6 @@ local os = {
     time = os.time,
     setlocale = os.setlocale,
     getenv = os.getenv,
-    execute = os.execute,
 }
 
 -- inherit zenburn theme
@@ -290,9 +289,9 @@ local _wvolume = away.widget.alsa({
     setting = function(volume)
         volume.set_now(volume)
         if volume.now.status == "off" then
-            os.execute(string.format("volnoti-show -m"))
+            awful.spawn("volnoti-show -m")
         else
-            os.execute(string.format("volnoti-show %s", volume.now.level))
+            awful.spawn(string.format("volnoti-show %s", volume.now.level))
         end
     end,
     buttoncmds = { left="pavucontrol" },
