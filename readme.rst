@@ -257,9 +257,9 @@ ALSA
         setting = function(volume)
             volume.set_now(volume)
             if volume.now.status == "off" then
-                os.execute(string.format("volnoti-show -m"))
+                awful.spawn("volnoti-show -m")
             else
-                os.execute(string.format("volnoti-show %s", volume.now.level))
+                awful.spawn(string.format("volnoti-show %s", volume.now.level))
             end
         end,
         buttoncmds = { left="pavucontrol" },
@@ -400,6 +400,35 @@ menu
             height=dpi(20, s), width=dpi(120, s), font=nil,
         },
     })
+
+
+xrandr menu
+-----------
+
+.. code:: lua
+
+    local xrandr_info = [[Monitors: 2
+     0: +*eDP1 1366/310x768/170+0+0  eDP1
+     1: +HDMI1 3840/1220x2160/690+1366+0  HDMI1
+    ]]
+    xrandr_menu = away.xrandr({
+        info = xrandr_info, -- all known monitors
+        items = {
+            { menuname="HS-MiTV", dpi=144, complete=true, monitors={
+                { key='eDP1-310x170', scale=1.5 }, -- laptop T450
+                { key='HDMI1-1220x690', scale=1.0 } -- MiTV
+            } },
+            { menuname='Reset', dpi=96, complete=true, monitors={
+                { key='eDP1-310x170', scale=1.0 }, -- laptop T450
+            } },
+        }
+    })
+    -- show0: show info of all known monitors
+    -- showX: show connected monitors info get by 'xrandr --listmonitors'
+    -- showA: show focused screen info get from awesome
+    -- H-all: stack all connected outputs horizontally (--auto)
+    -- HS-MiTV: stack T450 scale=1.5, MiTV horizontally
+    -- Reset: only enable T450 scale=1.0, disable others (--off)
 
 
 Theme: think
