@@ -16,7 +16,7 @@ local utilloaded, util = pcall(require, "away.util")
 local pairs, tonumber, type, setmetatable = pairs, tonumber, type, setmetatable
 local string = { gmatch=string.gmatch, match = string.match,
     format=string.format, rep = string.rep }
-local math = { ceil=math.ceil }
+local math = { ceil=math.ceil, max=math.max }
 local table = { insert=table.insert, concat=table.concat,
     unpack=table.unpack, remove=table.remove }
 local os = { remove = os.remove }
@@ -265,7 +265,7 @@ function xrandr.template_hsline(data, data0, dpi, monitors, complete)
         args = args .. string.format(
             ' --mode %dx%d --scale %s --panning %dx%d+%d+%d',
             M.W, M.H, scale, sW, sH, posx, 0) -- right-of
-        fbw, fbh = fbw + sW, fbh + sH
+        fbw, fbh = fbw + sW, math.max(fbh, sH)
         posx = posx + sW -- right-of
         table.insert(res, args)
     end
