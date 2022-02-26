@@ -17,7 +17,7 @@ local utilloaded, util = pcall(require, "away.util")
 local pairs, tonumber, type, setmetatable = pairs, tonumber, type, setmetatable
 local string = { gmatch=string.gmatch, match = string.match,
     format=string.format, rep = string.rep }
-local math = { ceil=math.ceil, max=math.max }
+local math = { ceil=math.ceil, floor=math.floor, max=math.max, min=math.min }
 local table = { insert=table.insert, concat=table.concat,
     unpack=table.unpack, remove=table.remove }
 local os = { remove = os.remove }
@@ -131,12 +131,14 @@ end
 local xrandr = { mt={} }
 local Xresources = gfs.get_xdg_cache_home() .. 'away.Xresources'
 
--- save dpi to away.Xresources (~/.cache/away.Xresources),
+-- save dpi Xcursor.size to away.Xresources (~/.cache/away.Xresources),
 -- and xrdb -merge it, then restart awesome
 function xrandr.save_dpi_merge_restart(dpi)
     dpi = dpi or 96
+    local csize = math.min(math.floor(dpi/96+0.5)*16, 64)
     os.remove(Xresources)
-    async_run(string.format("echo 'Xft.dpi: %d' > %s", dpi, Xresources),
+    async_run(string.format(
+        "echo 'Xft.dpi: %d\nXcursor.size: %d' > %s", dpi, csize, Xresources),
         function()
             async_run("xrdb -merge " .. Xresources, function()
                 for s in capi.screen do
