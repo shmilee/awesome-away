@@ -20,7 +20,7 @@ micky
 * url: https://github.com/basaran/awesomewm-micky
 * usage: https://github.com/basaran/awesomewm-micky#config
 * ver: commit f023695 on 7 Jul 2021
-* fix: rm require('inspect')
+* fix: rm require('inspect'), micky.lua:44: attempt to index a nil value (local `client_under_mouse`)
 
 revelation
 ----------

@@ -41,7 +41,7 @@ client.connect_signal("focus", function(c)
 
     gears.timer.weak_start_new(0.15, function()
         local client_under_mouse = mouse.current_client
-        local should_stay = set_contains(stay_classes, client_under_mouse.class)
+        local should_stay = set_contains(stay_classes, client_under_mouse and client_under_mouse.class)
 
         if should_stay then return false end
         --+ exclusions 
