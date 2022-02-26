@@ -9,6 +9,7 @@
 --
 ---------------------------------------------------------------------------
 
+local capi = { screen = screen, }
 local naughty = require("naughty")
 local awful = require("awful")
 local gfs = require("gears.filesystem")
@@ -138,11 +139,15 @@ function xrandr.save_dpi_merge_restart(dpi)
     async_run(string.format("echo 'Xft.dpi: %d' > %s", dpi, Xresources),
         function()
             async_run("xrdb -merge " .. Xresources, function()
-                if utilloaded then
-                    local line = string.rep('-', 15)
-                    util.print_info(line .. " Restart awesome " .. line)
+                for s in capi.screen do
+                    if s.dpi ~= dpi then
+                        if utilloaded then
+                            local line = string.rep('-', 15)
+                            util.print_info(line .. " Restart awesome " .. line)
+                        end
+                        awesome.restart() -- no need break
+                    end
                 end
-                awesome.restart()
             end, true)
         end,
         true
