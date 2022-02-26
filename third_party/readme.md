@@ -7,6 +7,21 @@ dkjson
 * usage: http://dkolf.de/src/dkjson-lua.fsl/home
 * ver: Version 2.6 (2021-12-19)
 
+inspect
+-------
+
+* url: https://github.com/kikito/inspect.lua
+* usage: https://github.com/kikito/inspect.lua#examples-of-use
+* ver: commit 3c7414a on Feb 9, 2022
+
+micky
+-----
+
+* url: https://github.com/basaran/awesomewm-micky
+* usage: https://github.com/basaran/awesomewm-micky#config
+* ver: commit f023695 on 7 Jul 2021
+* fix: rm require('inspect')
+
 revelation
 ----------
 
