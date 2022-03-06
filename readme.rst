@@ -425,7 +425,7 @@ xrandr menu
     })
     -- show0: show info of all known monitors
     -- showX: show connected monitors info get by 'xrandr --listmonitors'
-    -- showA: show focused screen info get from awesome
+    -- showA: show screen info get from awesome
     -- H-all: stack all connected outputs horizontally (--auto)
     -- HS-MiTV: stack T450 scale=1.5, MiTV horizontally
     -- Reset: only enable T450 scale=1.0, disable others (--off)

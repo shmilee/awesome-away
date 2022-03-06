@@ -355,10 +355,13 @@ function xrandr.new(args)
             end, false, true)
         end },
         { "showA", function()
-            local s = awful.screen.focused()
-            naughty.notify({ text = string.format(
-                "Screen: %d\nDPI: %d\nGeometry: %dx%d",
-                s.index, s.dpi, s.geometry.width, s.geometry.height) })
+            local text = {}
+            for s in capi.screen do
+                table.insert(text, string.format(
+                    "Screen: %d\nDPI: %d\nGeometry: %dx%d",
+                    s.index, s.dpi, s.geometry.width, s.geometry.height))
+            end
+            naughty.notify({ text = table.concat(text, '\n\n') })
         end },
         { string.rep('-', 10), function () end }, -- sep
         { "H-all", function()
