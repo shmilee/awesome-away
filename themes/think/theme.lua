@@ -10,6 +10,7 @@ local wibox = require("wibox")
 local dpi   = require("beautiful").xresources.apply_dpi
 local gfs   = require("gears.filesystem")
 local hotkeys_popup = require("awful.hotkeys_popup")
+local capi = { screen = screen }
 local os = {
     date = os.date,
     time = os.time,
@@ -283,6 +284,16 @@ local _wbattery = away.widget.battery({
     font = wfont,
 })
 _wbattery:attach(_wbattery.wicon)
+-- kill videowallpaper, save energy
+table.insert(_wbattery.observer.handlers, function(observer, val)
+    if observer.status == 'Discharging' then
+        for s in capi.screen do
+            if s.videowallpaper and s.videowallpaper.pid then
+                s.videowallpaper.kill_and_set()
+            end
+        end
+    end
+end)
 -- 7. ALSA volume
 local _wvolume = away.widget.alsa({
     theme = theme,
@@ -445,14 +456,6 @@ function theme.createmywibox(s)
     -- layoutbox per screen.
     s.mylayoutbox = awful.widget.layoutbox(s)
     s.mylayoutbox:buttons(theme.layoutbox_buttons)
-    -- videowallpaper, _wbattery
-    if s.videowallpaper then
-        table.insert(_wbattery.observer.handlers, function(observer, val)
-            if observer.status == 'Discharging' then
-                s.videowallpaper.kill_and_set() -- save energy
-            end
-        end)
-    end
     -- group all widgets
     local enablewidgets = {
         {_wmem.wicon, _wmem.wtext},

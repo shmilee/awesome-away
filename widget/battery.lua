@@ -140,7 +140,8 @@ local function worker(args)
     bat.observer = gears.object({class={}})
     bat.observer.handlers = {}
     bat.observer:connect_signal('property::status', function(obj, val)
-        for i, handler in pairs(bat.observer.handlers) do
+        -- self: obj is bat.observer
+        for i, handler in pairs(obj.handlers) do
             handler(obj, val)
         end
     end)
