@@ -127,6 +127,18 @@ function theme.wallpaper(s)
     end
     return theme.wallpaper_fallback[index]
 end
+
+-- delete timer of wallpaper
+function theme.del_wallpaper_timer(s)
+    away.util.print_info('Removed screen is ' .. gears.debug.dump_return(s.outputs))
+    if s.miscwallpaper then
+        s.miscwallpaper.delete_timer()
+    end
+    if s.videowallpaper then
+        s.videowallpaper.delete_timer()
+        s.videowallpaper.kill_and_set()
+    end
+end
 -- }}}
 
 -- {{{ Styles

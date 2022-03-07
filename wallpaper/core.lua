@@ -30,6 +30,14 @@ function core.assemble_id_with_screen(screen, id)
     end
 end
 
+function core.delete_timer(wallpaper, key)
+    if wallpaper[key] then
+        util.print_info('Delete ' .. key .. ' of ' .. wallpaper.id)
+        wallpaper[key]:stop()
+        wallpaper[key] = nil
+    end
+end
+
 -- RemoteWallPaper: fetch remote images with meta data
 function core.get_remotewallpaper(screen, args)
     local rwallpaper    = { screen=screen, url=nil, path=nil, using=nil }
@@ -383,6 +391,10 @@ function core.get_videowallpaper(screen, args)
         else
             return videowall.path
         end
+    end
+
+    function videowall.delete_timer()
+        core.delete_timer(videowall, 'timer')
     end
 
     if videowall.path ~= nil then

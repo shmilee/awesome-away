@@ -70,6 +70,10 @@ function wallpaper.get_solowallpaper(screen, name, args)
         local swp = wallpaper.available[name](screen, args)
         local timeout = args.timeout or 60
         swp.timer = gears.timer({ timeout=timeout, autostart=true, callback=swp.update })
+        function swp.delete_timer()
+            core.delete_timer(swp, 'timer')
+            core.delete_timer(swp, 'timer_info')
+        end
         function swp.print_using()
             if swp.path == nil or swp.path[swp.using] == nil then
                 util.print_info('Using Wallpaper nil', swp.id)
@@ -90,8 +94,8 @@ end
 
 -- MISC Wallpaper
 function wallpaper.get_miscwallpaper(screen, margs, candidates)
-    local mwp     = { screen=screen, members={}, using=nil }
     local id      = core.assemble_id_with_screen(screen, 'MISC')
+    local mwp     = { screen=screen, id=id, members={}, using=nil }
     local timeout = margs.timeout or 60
     local random  = margs.random or false
 
@@ -174,6 +178,12 @@ function wallpaper.get_miscwallpaper(screen, margs, candidates)
     end
 
     mwp.timer = gears.timer({ timeout=timeout, autostart=true, callback=mwp.update })
+    function mwp.delete_timer()
+        core.delete_timer(mwp, 'timer')
+        for i, w in pairs(mwp.members) do
+            core.delete_timer(w, 'timer_info')
+        end
+    end
 
     if margs.update_by_tag then
         wallpaper.turn_on_update_by_tag(mwp)
