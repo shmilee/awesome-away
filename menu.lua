@@ -208,16 +208,41 @@ function awaymenu:toggle()
     self.awful_menupopup:toggle()
 end
 
+-- Update a away menupopup
+-- @param args.theme see awaymenu.new
+-- @param args.before see awaymenu.new
+-- @param args.after see awaymenu.new
+-- @param args.skip_items skip to update awaymenu.items or not, default false
+function awaymenu:update(args)
+    local args = args or {}
+    self.theme = args.theme or self.theme
+    self.before = args.before or self.before
+    self.after = args.after or self.after
+    if not args.skip_items then
+        local awesome_wm_name = menubar.utils.wm_name -- save old
+        menubar.utils.wm_name = awaymenu.osi_wm_name
+        menubar.menu_gen.generate(function(entries) -- callback for async
+            menubar.utils.wm_name = awesome_wm_name -- restore old
+            awaymenu.items = awaymenu._parse_entries(entries)
+        end)
+    end
+    if self.awful_menupopup ~= nil then -- existing one
+        self.awful_menupopup:hide()
+    end
+    self.awful_menupopup = nil
+    self.complete = false
+end
+
 -- use awful.menu to generate menupopup
 -- (lazy evaluation, wait for awaymenu.items)
--- @param theme for awful.menu args.theme, like:
+-- @param args.theme for awful.menu args.theme, like:
 --     theme.height and theme.width, theme.font, etc.
 --     see: https://awesomewm.org/doc/api/libraries/awful.menu.html#new
--- @param before entries before awaymenu.items
--- @param after entries after awaymenu.items
+-- @param args.before entries before awaymenu.items
+-- @param args.after entries after awaymenu.items
 -- @return away menupopup
 function awaymenu.new(args)
-    local args   = args or {}
+    local args = args or {}
     return {
         theme  = args.theme or {},
         before = args.before or {},
@@ -228,6 +253,7 @@ function awaymenu.new(args)
         toggle = awaymenu.toggle,
         hide = awaymenu.hide,
         show = awaymenu.show,
+        update = awaymenu.update,
     }
 end
 

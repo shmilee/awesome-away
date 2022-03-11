@@ -209,6 +209,12 @@ function theme.awesomemenu()
                     s.miscwallpaper.update()
                 end
             end },
+            { "renew menu", function()
+                local s = awful.screen.focused()
+                if s.mymainmenu then
+                    s.mymainmenu:update()
+                end
+            end },
             { "xrandr", theme.xrandr_menu() },
             { "manual", theme.terminal .. " -e 'man awesome'" },
             { "edit config", string.format(theme.editor_cmd, awesome.conffile) },
