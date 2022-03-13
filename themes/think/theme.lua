@@ -190,6 +190,28 @@ away.menu.menubar_nice_category_name()
 function theme.xrandr_menu()
     return away.xrandr({})
 end
+function theme.updates_menu()
+    return {
+        { "main menu", function()
+            local s = awful.screen.focused()
+            if s.mymainmenu then
+                s.mymainmenu:update()
+            end
+        end },
+        { "misc wall", function()
+            local s = awful.screen.focused()
+            if s.miscwallpaper then
+                s.miscwallpaper.update()
+            end
+        end },
+        { "video wall", function()
+            local s = awful.screen.focused()
+            if s.videowallpaper then
+                s.videowallpaper.update()
+            end
+        end },
+    }
+end
 function theme.awesomemenu()
     return { {
         "Awesome",
@@ -203,18 +225,13 @@ function theme.awesomemenu()
                     s.miscwallpaper.print_using()
                 end
             end },
-            { "next bing", function()
+            { "this video", function()
                 local s = awful.screen.focused()
-                if s.miscwallpaper then
-                    s.miscwallpaper.update()
+                if s.videowallpaper then
+                    s.videowallpaper.print_using()
                 end
             end },
-            { "renew menu", function()
-                local s = awful.screen.focused()
-                if s.mymainmenu then
-                    s.mymainmenu:update()
-                end
-            end },
+            { "updates", theme.updates_menu() },
             { "xrandr", theme.xrandr_menu() },
             { "manual", theme.terminal .. " -e 'man awesome'" },
             { "edit config", string.format(theme.editor_cmd, awesome.conffile) },
