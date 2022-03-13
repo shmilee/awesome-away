@@ -11,7 +11,7 @@
 local util  = require("away.util")
 local gears = require("gears")
 local spawn = require("awful.spawn")
-
+local naughty = require("naughty")
 local os     = { remove = os.remove }
 local string = {
     format = string.format,
@@ -35,6 +35,17 @@ function core.delete_timer(wallpaper, key)
         util.print_info('Delete ' .. key .. ' of ' .. wallpaper.id)
         wallpaper[key]:stop()
         wallpaper[key] = nil
+    end
+end
+
+function core.print_using(wallpaper)
+    local wall = wallpaper.path and wallpaper.path[wallpaper.using]
+    if wall then
+        util.print_info('Using Wallpaper ' .. wall, wallpaper.id)
+        naughty.notify({ title = 'Using Wallpaper ' .. wall })
+    else
+        util.print_info('Using Wallpaper nil', wallpaper.id)
+        naughty.notify({ title = 'Using Wallpaper nil' })
     end
 end
 
@@ -156,11 +167,7 @@ function core.get_remotewallpaper(screen, args)
     end
 
     function rwallpaper.print_using()
-        if rwallpaper.path == nil then
-            return nil
-        else
-            return rwallpaper.path[rwallpaper.using]
-        end
+        core.print_using(rwallpaper)
     end
 
     rwallpaper.timer_info = gears.timer({ timeout=timeout_info, autostart=true, callback=rwallpaper.update_info })
@@ -242,11 +249,7 @@ function core.get_localwallpaper(screen, args)
     end
 
     function lwallpaper.print_using()
-        if lwallpaper.path == nil then
-            return nil
-        else
-            return lwallpaper.path[lwallpaper.using]
-        end
+        core.print_using(lwallpaper)
     end
 
     lwallpaper.update_info()
@@ -281,10 +284,6 @@ function core.get_videowallpaper(screen, args)
     local videowall = { screen=screen, id=id, path=nil, pid=nil }
     local xargs_str = table.concat(xargs, ' ')
     local pargs_str = table.concat(pargs, ' ')
-    local g   = screen.geometry
-    local cmd = string.format("%s -g %dx%d+%d+%d %s -- %s %s",
-        xwinwrap, g.width, g.height, g.x, g.y, xargs_str, player, pargs_str)
-    util.print_info('video wallpaper cmd: ' .. cmd, id)
     if type(path) == 'string' then
         if (path:match('^http://') or path:match('^https://')
                 or gears.filesystem.file_readable(path)) then
@@ -297,9 +296,16 @@ function core.get_videowallpaper(screen, args)
         util.print_error('Please set video wallpaper path!', id)
     end
 
+    local function get_cmd() -- catch the changed geometry
+        local g   = screen.geometry
+        local cmd = string.format("%s -g %dx%d+%d+%d %s -- %s %s",
+            xwinwrap, g.width, g.height, g.x, g.y, xargs_str, player, pargs_str)
+        return cmd
+    end
+
     --pid: https://awesomewm.org/doc/api/libraries/awful.spawn.html#easy_async_with_shell
     local function realsetting(realpath)
-        local cmdline = string.format("%s '%s'", cmd, realpath)
+        local cmdline = string.format("%s '%s'", get_cmd(), realpath)
         util.print_info('Set video wallpaper cmdline: ' .. cmdline, id)
         videowall.pid = spawn.easy_async_with_shell(cmdline,
             function(stdout, stderr, reason, exit_code)
@@ -387,9 +393,11 @@ function core.get_videowallpaper(screen, args)
 
     function videowall.print_using()
         if videowall.path == nil then
-            return nil
+            util.print_info('Using VideoWallpaper nil', id)
+            naughty.notify({ title = 'Using VideoWallpaper nil' })
         else
-            return videowall.path
+            util.print_info('Using VideoWallpaper ' .. videowall.path, id)
+            naughty.notify({ title = 'Using VideoWallpaper ' .. videowall.path })
         end
     end
 

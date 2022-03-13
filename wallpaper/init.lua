@@ -11,7 +11,6 @@
 local util    = require("away.util")
 local core    = require("away.wallpaper.core")
 local gears   = require("gears")
-local naughty = require("naughty")
 
 local os    = { time = os.time }
 local math  = { randomseed = math.randomseed, random = math.random }
@@ -73,15 +72,6 @@ function wallpaper.get_solowallpaper(screen, name, args)
         function swp.delete_timer()
             core.delete_timer(swp, 'timer')
             core.delete_timer(swp, 'timer_info')
-        end
-        function swp.print_using()
-            if swp.path == nil or swp.path[swp.using] == nil then
-                util.print_info('Using Wallpaper nil', swp.id)
-                naughty.notify({ title = 'Using Wallpaper nil' })
-            else
-                util.print_info('Using Wallpaper ' .. swp.path[swp.using], swp.id)
-                naughty.notify({ title = 'Using Wallpaper ' .. swp.path[swp.using]})
-            end
         end
         if args.update_by_tag then
             wallpaper.turn_on_update_by_tag(swp)
@@ -168,13 +158,7 @@ function wallpaper.get_miscwallpaper(screen, margs, candidates)
 
     function mwp.print_using()
         local wall = mwp.members[mwp.using]
-        if wall.print_using() then
-            util.print_info('Using Wallpaper ' .. wall.print_using(), id)
-            naughty.notify({ title = 'Using Wallpaper ' .. wall.print_using()})
-        else
-            util.print_info('Using Wallpaper nil', id)
-            naughty.notify({ title = 'Using Wallpaper nil' })            
-        end
+        wall.print_using()
     end
 
     mwp.timer = gears.timer({ timeout=timeout, autostart=true, callback=mwp.update })
