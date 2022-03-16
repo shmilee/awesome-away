@@ -49,11 +49,11 @@ local function worker(args)
                 elseif k == "Cached"       then mem.now.cache = math.floor(v / 1024 + 0.5)
                 elseif k == "SwapTotal"    then mem.now.swap  = math.floor(v / 1024 + 0.5)
                 elseif k == "SwapFree"     then mem.now.swapf = math.floor(v / 1024 + 0.5)
-                elseif k == "Shmem"        then mem.now.share = math.floor(v / 1024 + 0.5)
+                --elseif k == "Shmem"        then mem.now.share = math.floor(v / 1024 + 0.5)
                 elseif k == "SReclaimable" then mem.now.srec  = math.floor(v / 1024 + 0.5)
                 end
             end
-            mem.now.used = mem.now.total + mem.now.share
+            mem.now.used = mem.now.total --+ mem.now.share
                 - mem.now.free - mem.now.buf - mem.now.cache - mem.now.srec
             mem.now.swapused = mem.now.swap - mem.now.swapf
             mem.now.perc = math.floor(mem.now.used / mem.now.total * 100)
