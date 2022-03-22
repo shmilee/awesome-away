@@ -47,10 +47,12 @@ local function worker(args)
             end
 
             local battery_info, notification = {}, ''
-            bat.now.status = 'Unknown' -- Discharging, Charging, Unknown
+            -- https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-class-power
+            -- /sys/class/power_supply/<supply_name>/status
+            bat.now.status = 'Unknown' -- Discharging, Charging, Unknown, Not charging, Full
             bat.now.ac = true
             for s in string.gmatch(stdout, "[^\r\n]+") do
-                local name, status, perc = string.match(s, '(.+): (%a+), (%d?%d?%d)%%,?.*')
+                local name, status, perc = string.match(s, '(.+): ([%a%s]+), (%d+)%%,?.*')
                 if status then
                     battery_info[name] = { status=status, perc=tonumber(perc) }
                     if status == 'Discharging' then
@@ -64,7 +66,9 @@ local function worker(args)
                 end
                 local name, cap = string.match(s, '(.+):.+last full capacity (%d+)')
                 if cap then
-                    battery_info[name]['cap'] = tonumber(cap)
+                    if battery_info[name] then
+                        battery_info[name]['cap'] = tonumber(cap)
+                    end
                 end
             end
             notification = string.match(notification, '(.+)\n$')
