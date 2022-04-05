@@ -13,6 +13,7 @@ local print, tostring, pairs, pcall, require
     = print, tostring, pairs, pcall, require
 local string = { format = string.format }
 local awfulloaded, awful = pcall(require, "awful")
+local gfsloaded, gfs = pcall(require, "gears.filesystem")
 
 local util = {}
 util.curdir = debug.getinfo(1, 'S').source:match[[^@(.*/).*$]]
@@ -128,6 +129,8 @@ function util.markup(text, tag)
     return string.format('<%s>%s</%s>', tag, text, tag)
 end
 
+-- awful part
+
 local spawn_async, spawn_async_with_shell
 if awfulloaded then
     spawn_async = awful.spawn.easy_async
@@ -151,7 +154,7 @@ local function async_run(spawn_async, cmd, callback, pass_args)
         util.print_info(
             "Run command: " .. cmd .. ", DONE with exit code " .. ecode)
         if type(callback) == 'function' then
-            if pass_args then
+            if pass_args or (pass_args == nil) then
                 callback(stdout, stderr, reason, ecode)
             else
                 callback()
@@ -162,13 +165,38 @@ end
 
 -- @param cmd string
 -- @param callback function
--- @param pass_args pass stdout, stderr, reason, ecode to callback if true
+-- @param pass_args boolean, default true
+--      pass stdout, stderr, reason, ecode to callback if true
 function util.async(cmd, callback, pass_args)
     async_run(spawn_async, cmd, callback, pass_args)
 end
 
 function util.async_with_shell(cmd, callback, pass_args)
     async_run(spawn_async_with_shell, cmd, callback, pass_args)
+end
+
+-- gfs part
+
+if gfsloaded then
+    util.get_xdg_config_home = gfs.get_xdg_config_home
+    util.get_xdg_cache_home = gfs.get_xdg_cache_home
+    util.file_readable = gfs.file_readable
+else
+    function util.get_xdg_config_home()
+        return (os.getenv("XDG_CONFIG_HOME")
+            or os.getenv("HOME") .. "/.config") .. "/"
+    end
+
+    function util.get_xdg_cache_home()
+        return (os.getenv("XDG_CACHE_HOME")
+            or os.getenv("HOME") .. "/.cache") .. "/"
+    end
+
+    function util.file_readable(filename)
+        local f = io.open(filename, "rb")
+        if f then f:close() end
+        return f ~= nil
+    end
 end
 
 return util
