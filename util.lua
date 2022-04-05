@@ -12,6 +12,7 @@ local io, os, debug, table = io, os, debug, table
 local print, tostring, pairs, pcall, require
     = print, tostring, pairs, pcall, require
 local string = { format = string.format }
+local awfulloaded, awful = pcall(require, "awful")
 
 local util = {}
 util.curdir = debug.getinfo(1, 'S').source:match[[^@(.*/).*$]]
@@ -92,6 +93,16 @@ function util.get_file_size(path)
     return size
 end
 
+-- Return the index of element in the table *tab*
+function util.table_index(tab, el)
+    for i, v in pairs(tab) do
+        if v == el then
+            return i
+        end
+    end
+    return nil
+end
+
 -- Set Markup foreground, background color and more, like font, size, etc.
 -- see https://docs.gtk.org/Pango/pango_markup.html#the-span-attributes
 function util.markup_span(text, fg, bg, more)
@@ -115,6 +126,49 @@ end
 -- see https://docs.gtk.org/Pango/pango_markup.html#convenience-tags
 function util.markup(text, tag)
     return string.format('<%s>%s</%s>', tag, text, tag)
+end
+
+local spawn_async, spawn_async_with_shell
+if awfulloaded then
+    spawn_async = awful.spawn.easy_async
+    spawn_async_with_shell = awful.spawn.easy_async_with_shell
+else
+    -- ref: https://github.com/vicious-widgets/vicious/blob/master/spawn.lua
+    function spawn_async_with_shell(cmd, callback)
+        local out_stream = io.popen(cmd)
+        local stdout = out_stream:read("*all")
+        local success, reason, code = out_stream:close() -- requiring Lua 5.2
+        local stderr = 'empty stderr due to limitation of io.popen'
+        callback(stdout, stderr, reason, code)
+        return success
+    end
+    spawn_async = spawn_async_with_shell
+end
+
+-- @param spawn_async function to use
+local function async_run(spawn_async, cmd, callback, pass_args)
+    spawn_async(cmd, function(stdout, stderr, reason, ecode)
+        util.print_info(
+            "Run command: " .. cmd .. ", DONE with exit code " .. ecode)
+        if type(callback) == 'function' then
+            if pass_args then
+                callback(stdout, stderr, reason, ecode)
+            else
+                callback()
+            end
+        end
+    end)
+end
+
+-- @param cmd string
+-- @param callback function
+-- @param pass_args pass stdout, stderr, reason, ecode to callback if true
+function util.async(cmd, callback, pass_args)
+    async_run(spawn_async, cmd, callback, pass_args)
+end
+
+function util.async_with_shell(cmd, callback, pass_args)
+    async_run(spawn_async_with_shell, cmd, callback, pass_args)
 end
 
 return util
