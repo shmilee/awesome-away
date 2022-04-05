@@ -1,7 +1,6 @@
 ---------------------------------------------------------------------------
 --
---  xrandr module for away
---  generate awful menu items to call xrandr and show screen info
+--  xrandr module for away, call xrandr and show screen info
 --
 --  Copyright (c) 2022 shmilee
 --  Licensed under GNU General Public License v2:
@@ -9,214 +8,262 @@
 --
 ---------------------------------------------------------------------------
 
-local capi = { screen = screen, }
-local naughty = require("naughty")
-local awful = require("awful")
-local gfs = require("gears.filesystem")
-local utilloaded, util = pcall(require, "away.util")
-local pairs, tonumber, type, setmetatable = pairs, tonumber, type, setmetatable
-local string = { gmatch=string.gmatch, match = string.match,
-    format=string.format, rep = string.rep }
-local math = { ceil=math.ceil, floor=math.floor, max=math.max, min=math.min }
+local pairs, pcall, tonumber, tostring, type = pairs, pcall, tonumber, tostring, type
+local string = { byte=string.byte, gsub = string.gsub, char=string.char,
+    gmatch=string.gmatch, match = string.match, format=string.format }
+local math = { ceil=math.ceil, max=math.max, floor=math.floor, min=math.min }
 local table = { insert=table.insert, concat=table.concat,
     unpack=table.unpack, remove=table.remove }
 local os = { remove = os.remove }
 local io = { open = io.open }
 
-local function get_monitor_info(self, key)
-    local mi = self['Search'][key]
-    if mi then
-        return self[mi]
-    else
-        return nil
+local utilloaded, util
+for _,c in pairs({ "away.util", "util", "awesome-away.util" }) do
+    utilloaded, util = pcall(require, c)
+    if utilloaded then
+        break
     end
+end
+if not utilloaded then
+    print("ERROR: lost module 'util'!")
+    return nil
+end
+local naughtyloaded, naughty = pcall(require, "naughty")
+if not naughtyloaded then
+    naughty = { notify = function(args)
+        local args = args or {}
+        print(args.text or '')
+    end }
+end
+
+local xrandr = {
+    key_style = 'full'  -- 'full' or 'short'
+}
+
+-- get some info from edid
+-- ref: https://gitlab.com/k3rni/foggy/-/blob/master/edid.lua
+-- ref: https://en.wikipedia.org/wiki/Extended_Display_Identification_Data
+function xrandr.parse_edid(edid)
+    local ord = string.byte
+    local bytes = string.gsub(edid, "([a-f0-9][a-f0-9])", function(m)
+        return string.char(tonumber(m, 16))
+    end)
+    local esub = (edid:sub(17,21) .. '-' .. edid:sub(44,46) .. '-'
+        .. edid:sub(255,256) .. '-' .. edid:sub(-1))
+    --local mfr0, mfr1 = ord(bytes, 11, 12)
+    --local manufacturer_code = mfr0 + mfr1 * 2^8
+    --local sn0, sn1, sn2, sn3 = ord(bytes, 13, 16)
+    --local serial_number = (sn0 + sn1 * 2^8 + sn2 * 2^16 + sn3 * 2^24)
+    --local week_of_manufacture = ord(bytes, 17)
+    --local year_of_manufacture = ord(bytes, 18) + 1990
+    local width_mm = ord(bytes, 22) * 10
+    local height_mm = ord(bytes, 23) * 10
+
+    -- Descriptor blocks store things such as monitor name. Zero-based, corrected later.
+    local descriptor_block_offsets = { { 54, 71 }, { 72, 89 }, { 90, 107 }, { 108, 125 } }
+    local monitor_name
+    for _, offset in pairs(descriptor_block_offsets) do
+        local low = offset[1] + 1
+        local high = offset[2] + 1
+        local desc_type = string.byte(bytes:sub(low + 3))
+        if desc_type == 0xFC then -- monitor name, space-padded with a LF
+            monitor_name = bytes:sub(low + 5, high):gsub("[\r\n ]+$", "")
+        end
+    end
+    --return manufacturer_code, serial_number, week_of_manufacture, year_of_manufacture
+    return esub, width_mm, height_mm, monitor_name
+end
+
+local function get_monitor_info(self, key)
+    return self['Search'][key] or nil
 end
 
 local function show_monitors_info(self)
     local noti = ''
-    if self['Count'] > 0 then
-        for i=1,self['Count'] do
-            local Mi = self[string.format('m%d', i)]
-            if Mi then
-                if i>1 then
-                    noti = noti .. '\n\n'
-                end
-                --local query_str = {}
-                --for i,v in pairs(Mi) do
-                --    table.insert(query_str, i .. '=' .. tostring(v))
-                --end
-                --naughty.notify({ text = table.concat(query_str, '&') })
-                noti = noti .. string.format(
-                    "Monitor: %d\nName: %s\nDPI: %.2f\nGeometry: %dx%d",
-                    Mi.i, Mi.N, Mi.DPI, Mi.W, Mi.H)
+    local info = ("Monitor %d: %s\nKey: %s\nDPI: %.2f\nGeometry: %dx%d\n"
+        .. "Size: %dmmx%dmm\nPreferred: %dx%d")
+    for i, key in pairs(self['Searchkey']) do
+        local Mi = self['Search'][key]
+        if Mi then
+            if i>1 then
+                noti = noti .. '\n\n'
             end
+            --local query_str = {}
+            --for i,v in pairs(Mi) do
+            --    table.insert(query_str, i .. '=' .. tostring(v))
+            --end
+            --naughty.notify({ text = table.concat(query_str, '&') })
+            local name = Mi.monitor_name or ''
+            noti = noti .. string.format(info, i, name, key, Mi.DPI,
+                Mi.width, Mi.height, Mi.Hsize, Mi.Vsize,
+                Mi.preferred[1][1], Mi.preferred[1][2])
         end
     end
     naughty.notify({ text = noti })
 end
 
-local xcmd_list = "xrandr --listmonitors"
-local re = {}
-re.WwHh = '(%d+)/(%d+)x(%d+)/(%d+)%+(%d+)%+(%d+)'
-re.list = '%s*(%d+):%s*([%+%*]*)[%w-]+%s*' .. re.WwHh .. '%s*([%w-]+)'
+xrandr.cmd_prop = "xrandr -q --prop"
 
--- parse `xrandr --listmonitors` output, like this:
---      Monitors: 2
---       0: +*eDP1 1366/310x768/170+0+0  eDP1
---       1: +HDMI1 3840/1220x2160/690+1366+0  HDMI1
+-- parse `xrandr -q --prop` output, like this:
 -- return monitors info table:
 --      'Count', 'Primary', 'Search', 'Searchkey',
---      'mi'={i,key,W,w,H,h,X,Y,N,dpix,dpiy,DPI},
+--      'key'={out,width,height,Hsize,Vsize,DPI,connected,active,properties},
 --      :get(key), :show()
--- Search key, like this: eDP1-310x170, HDMI1-1220x690
-local function parse_listmonitors(output)
+-- Search key, like this:
+--            --full--                  --short--
+--    eDP1-310x170-0dae9-f11-7e-e     eDP1-310x170
+--  HDMI1-1220x690-61a44-a45-db-d    HDMI1-1220x690
+local output_example = [[
+Screen 0: minimum 8 x 8, current 1366 x 768, maximum 32767 x 32767
+eDP1 connected primary 1366x768+0+0 (normal left inverted right x axis y axis) 310mm x 170mm
+	EDID: 
+		00ffffffffffff000dae901400000000
+	non-desktop: 0 
+		range: (0, 1)
+   1366x768      60.00*+
+   1280x720      59.86    60.00    59.74  
+   1024x768      60.00  
+DP1 disconnected (normal left inverted right x axis y axis)
+	Colorspace: Default 
+HDMI1 connected (normal left inverted right x axis y axis)
+	EDID: 
+		00ffffffffffff0061a44a0001000000
+]]
+local re = {}
+re.connected_info = '([%a]-)%s*(%d+)x(%d+).*%([%a%s]+%) (%d+)mm x (%d+)mm.*$'
+re.mode_info = '^%s%s%s(%d+)x(%d+)%s+[%d.]+.(.).*$'
+re.prop_info = '^\t([%a%s]+):%s*([^%s]*)%s*$'
+function xrandr.parse_prop_output(output)
+    local OUTS = {}
+    local this_out, this_prop
+    for s in string.gmatch(output, "[^\r\n]+") do
+        local out, conn, other = string.match(s, '^([%w-]+) (%a+) (.*)$')
+        if out then
+            -- 1. '^eDP1 '
+            this_out = { out = out, connected = (conn == 'connected') }
+            if conn == 'connected' then
+                local p, W, H, w, h = string.match(other, re.connected_info)
+                if W then
+                    this_out['active'] = true
+                end
+                this_out['primary'] = (p == 'primary')
+                this_out['width'] = tonumber(W)
+                this_out['height'] = tonumber(H)
+                this_out['Hsize'] = tonumber(w)
+                this_out['Vsize'] = tonumber(h)
+            end
+            this_out['preferred'] = {}
+            this_out['properties'] = {}
+            table.insert(OUTS, this_out)
+        else
+            -- 2. modeline: '   1366x768*+'
+            local W, H, plus = string.match(s, re.mode_info)
+            if W then
+                if plus == '+' then
+                    -- only save preferred mode
+                    table.insert(this_out['preferred'],
+                        { tonumber(W), tonumber(H) })
+                end
+            else
+                -- 3. '\tEDID: ', '\tColorspace: Default ', etc.
+                local prop, value = string.match(s, re.prop_info)
+                if prop then
+                    this_prop = prop
+                    this_out['properties'][prop] = value
+                else
+                    -- 4. prop data, '\t\t00ff', only for EDID
+                    if this_prop == 'EDID' then
+                        local data = string.match(s, '\t\t([0-9a-f]+)$')
+                        if data and data:len() == 32 then
+                            this_out['properties']['EDID'] = (
+                                this_out['properties']['EDID'] .. data)
+                        end
+                    end
+                end
+            end
+        end
+    end
+    -- slim OUTS info
     local res = { Count=0, Primary=nil, Search={}, Searchkey={},
                   get=get_monitor_info, show=show_monitors_info }
-    for s in string.gmatch(output, "[^\r\n]+") do
-        local i = string.match(s, 'Monitors:%s*(%d+)')
-        if i then
-            res['Count'] = tonumber(i)
-        else
-            local i, p, W, w, H, h, X, Y, N = string.match(s, re.list)
-            if i then
-                i = tonumber(i)+1
-                local M = string.format('m%d', i)
-                local key = string.format('%s-%sx%s', N, w, h)
-                W, w = tonumber(W), tonumber(w)
-                H, h = tonumber(H), tonumber(h)
-                X, Y = tonumber(X), tonumber(Y)
-                local dpix = math.ceil(W/(w/10/2.54)*100)/100
-                local dpiy = math.ceil(H/(h/10/2.54)*100)/100
-                local DPI = math.ceil((W^2+H^2)^0.5/((w^2+h^2)^0.5/10/2.54)*100)/100
-                res[M] = { i=i, key=key, W=W, w=w, H=H, h=h, X=X, Y=Y, N=N,
-                           dpix=dpix, dpiy=dpiy, DPI=DPI }
-                res['Search'][key] = M
-                table.insert(res['Searchkey'], key)
-                if p == '+*' then
-                    res['Primary'] = M
-                end
+    for _, out in pairs(OUTS) do
+        if out['connected'] then
+            local edid = out['properties']['EDID']
+            local esub, w_mm, h_mm, monitor_name = xrandr.parse_edid(edid)
+            out['Hsize'] = out['Hsize'] or w_mm
+            out['Vsize'] = out['Vsize'] or h_mm
+            local key = string.format('%s-%sx%s',
+                out['out'], out['Hsize'], out['Vsize'])
+            if xrandr.key_style == 'full' then
+                key = key .. '-' .. esub
+            end
+            if monitor_name then
+                out['monitor_name'] = monitor_name
+            end
+            out['width'] = out['width'] or out['preferred'][1][1]
+            out['height'] = out['height'] or out['preferred'][1][2]
+            local W, H = out['width'], out['height']
+            local w, h = out['Hsize'], out['Vsize']
+            out['DPI'] = math.ceil((W^2+H^2)^0.5/((w^2+h^2)^0.5/10/2.54)*100)/100
+            res['Search'][key] = out
+            table.insert(res['Searchkey'], key)
+            res['Count'] = res['Count'] + 1
+            if out['primary'] then
+                res['Primary'] = key
             end
         end
     end
     return res
 end
 
--- @param cmd string
--- @param callback function
--- @param shell call easy_async_with_shell if true
--- @param pass_args pass stdout, stderr, reason, ecode to callback if true
-local function async_run(cmd, callback, shell, pass_args)
-    local spawn_async
-    if shell then
-        spawn_async = awful.spawn.easy_async_with_shell
-    else
-        spawn_async = awful.spawn.easy_async
-    end
-    spawn_async(cmd, function(stdout, stderr, reason, ecode)
-        if utilloaded then
-            util.print_info(
-                "Run command: " .. cmd .. ", DONE with exit code " .. ecode)
-        end
-        if type(callback) == 'function' then
-            if pass_args then
-                callback(stdout, stderr, reason, ecode)
-            else
-                callback()
-            end
+-- show info about all connected outputs
+function xrandr.show_connected()
+    util.async_with_shell(xrandr.cmd_prop, function(stdout, err, rsn, ecode)
+        if ecode == 0 then
+            local data = xrandr.parse_prop_output(stdout)
+            data:show()
         end
     end)
 end
 
-
-local xrandr = { mt={} }
-local Xresources = gfs.get_xdg_cache_home() .. 'away.Xresources'
-
--- save dpi Xcursor.size to away.Xresources (~/.cache/away.Xresources),
--- and xrdb -merge it, then restart awesome
-function xrandr.save_dpi_merge_restart(dpi)
-    dpi = dpi or 96
-    local csize = math.min(math.floor(dpi/96+0.5)*16, 64)
-    os.remove(Xresources)
-    async_run(string.format(
-        "echo 'Xft.dpi: %d\nXcursor.size: %d' > %s", dpi, csize, Xresources),
-        function()
-            async_run("xrdb -merge " .. Xresources, function()
-                for s in capi.screen do
-                    if s.dpi ~= dpi then
-                        if utilloaded then
-                            local line = string.rep('-', 15)
-                            util.print_info(line .. " Restart awesome " .. line)
-                        end
-                        awesome.restart() -- no need break
-                    end
-                end
-            end, true)
-        end,
-        true
-    )
-end
-
--- read dpi from away.Xresources, then call callback to set dpi
--- @param callback function fired with dpi as argument
-function xrandr.read_set_dpi(callback)
-    if type(callback) == 'function' then
-        local dpi = 96 -- default
-        if gfs.file_readable(Xresources) then
-            -- awful.spawn.easy_async deprecated, get dpi immediately
-            local file = io.open(Xresources, 'r')
-            if file then
-                local m = string.match(file:read(), 'Xft.dpi:%s*(%d+)%s*')
-                file:close()
-                if m then
-                    dpi = tonumber(m)
-                end
-            end
-        end
-        callback(dpi)
-    end
-end
-
-local function table_index(tab, el)
-    for i, v in pairs(tab) do
-        if v == el then
-            return i
-        end
-    end
-    return nil
-end
-
--- filter needed monitors, add '--output' args
---   data:connected monitors   |   | 2 | 3 | 4 |   |
---   data0:known monitors      | 1 | 2 |   | 4 | 5 |
---   input:needed monitors     | 1 | 2 | 3 |   |   |
--- @param data, data0 table
--- @param monitors: {  { key='Search key', ... },  -- needed monitor 1
---  'Search key2', ... }
+-- filter needed monitors, scale preferred mode, add '--output' '--scale' args
+--   data:connected monitors   |   | 2 | 3 |
+--   input:needed monitors     | 1 | 2 |   |
+-- @param data table current screen info get from xrandr:
+--      'Count', 'Primary', 'Search', 'Searchkey', key1, key2, ...
+-- @param monitors = {
+--      { key='Search key1', scale=1.0 },  -- monitor 1
+--      'Search key2',  -- monitor 2, default scale 1.0
+--      ...
+--  }
 -- @param complete true if require all needed monitors connected
 -- @return nil or needed and connected monitors with corresponding args: {
---      { M, M0, monitor input {}, '--output M.N --primary' }, -- M0 info from data0
---      ... 
---  }
--- @return nil or '--output --off' args: '--output M4.N --off ...'
-function xrandr.filter_monitors(data, data0, monitors, complete)
-    local res, off, i, args = {}, {}, 0, nil
+--      { Mi, '--output %s --primary --mode %dx%d --scale %s', sW, sH },
+--      { ... }, ... }
+-- @return nil or '--output --off' args: '--output Mi3.out --off ...'
+function xrandr.filter_scale_monitors(data, monitors, complete)
+    local res, off, args = {}, {}, nil
     local connected = { table.unpack(data.Searchkey) }
+    monitors = monitors or data.Searchkey
     for _, v in pairs(monitors) do
         if type(v) == 'string' then
             v = { key=v }
         end
-        local M, M0 = data:get(v.key), data0:get(v.key)
-        if utilloaded then
-            util.print_info("Search: " .. v.key .. ", get " .. tostring(M and M.N))
-        end
-        if M then
-            i = i + 1
-            args = string.format('--output %s', M.N)
-            if i == 1 then
+        local Mi = data:get(v.key)
+        util.print_info("Search: " .. v.key .. ", get '"
+            .. tostring(Mi and (Mi.monitor_name or Mi.out)) .. "'")
+        if Mi then
+            args = string.format('--output %s', Mi.out)
+            if Mi.primary then
                 args = args .. ' --primary'
             end
-            table.insert(res, { M, M0, v, args})
-            local idx = table_index(connected, v.key)
+            local scale = v.scale or 1.0
+            local W, H = table.unpack(Mi['preferred'][1])
+            local sW, sH = math.ceil(W*scale)//2*2, math.ceil(H*scale)//2*2
+            args = args .. string.format(
+                ' --mode %dx%d --scale %s',  W, H, scale)
+            table.insert(res, { Mi, args, sW, sH})
+            local idx = util.table_index(connected, v.key)
             if idx then
                 table.remove(connected, idx) -- remove needed
             end
@@ -229,8 +276,8 @@ function xrandr.filter_monitors(data, data0, monitors, complete)
         end
     end
     for _, v in pairs(connected) do -- connected & not needed
-        local M = data:get(v)
-        table.insert(off, string.format('--output %s --off', M.N))
+        local Mi = data:get(v)
+        table.insert(off, string.format('--output %s --off', Mi.out))
     end
     if #res == 0 then
         res = nil
@@ -241,155 +288,129 @@ function xrandr.filter_monitors(data, data0, monitors, complete)
     return res, off and table.concat(off, ' ')
 end
 
--- stack all connected outputs horizontally with scale support
--- @param data table current screen info get from xrandr:
---      'Count', 'Primary', 'Search', 'Searchkey', 'mi', ...
--- @param data0 table screen info set by user
--- @param dpi number
--- @param monitors = {
---      { key='Search key1', scale=1.0 },  -- monitor 1
---      'Search key2',  -- monitor 2
---      ...
---  }
--- @param complete true if need all monitors connected
+-- stack needed monitors horizontally with scale support
+-- @param data, monitors, complete, pass to `filter_scale_monitors`
+-- @param data table, monitors info
+-- @param monitors table, default all connected
+-- @param complete boolean, default false
+-- @param dpi number, default 96
 -- @return cmd string:
 --      xrandr --dpi %d --fb %dx%d [monitor1 args] ...
 -- @return nil:
 --      no connected monitors
 --      or if complete is true and find one monitor not connected
-function xrandr.template_hsline(data, data0, dpi, monitors, complete)
-    local monitors, off = xrandr.filter_monitors(data, data0, monitors, complete)
-    if monitors == nil then
+function xrandr.template_hline_scale(data, monitors, complete, dpi)
+    local Mis, off = xrandr.filter_scale_monitors(data, monitors, complete)
+    if Mis == nil then
         return nil
     end
     local res, fbw, fbh, posx = {}, 0, 0, 0
-    for _, v in pairs(monitors) do
-        local M, M0, v, args = v[1], v[2], v[3], v[4]
-        local scale = v.scale or 1.0
-        M = M0 or M -- use info set by user first
-        local sW = math.ceil(M.W*scale)//2*2
-        local sH = math.ceil(M.H*scale)//2*2
-        args = args .. string.format(
-            ' --mode %dx%d --scale %s --panning %dx%d+%d+%d',
-            M.W, M.H, scale, sW, sH, posx, 0) -- right-of
+    for _, v in pairs(Mis) do
+        local Mi, args, sW, sH = v[1], v[2], v[3], v[4]
+        -- right-of
+        args = args .. string.format(' --panning %dx%d+%d+%d', sW, sH, posx, 0)
         fbw, fbh = fbw + sW, math.max(fbh, sH)
-        posx = posx + sW -- right-of
+        posx = posx + sW
         table.insert(res, args)
     end
     if off ~= nil then
         table.insert(res, off)
     end
     table.insert(res, 1,
-        string.format('xrandr --dpi %d --fb %dx%d', dpi, fbw, fbh))
+        string.format('xrandr --dpi %d --fb %dx%d', dpi or 96, fbw, fbh))
     return table.concat(res, ' ')
 end
 
--- @param args {
---      menuname='A',
---      template=function,  -- default xrandr.template_hsline
---      dpi=96,             -- default 96
---      monitors={          -- default all connected monitors, scale=1.0
---          { key='Search key1', scale=1.0 }, ...,
---      },
---      complete=false,     -- default false
---  }
--- @param data0
--- @return a menu item { menuname, function() ... end }
-function xrandr.menu_item(args, data0)
-    local template = args.template or xrandr.template_hsline
-    local dpi = args.dpi or 96
-    local complete = args.complete or false
-    local func = function()
-        async_run(xcmd_list, function(stdout, stderr, reason, exit_code)
-            if exit_code == 0 then
-                local data = parse_listmonitors(stdout)
-                local monitors = args.monitors or { table.unpack(data.Searchkey) }
-                local cmd = template(data, data0, dpi, monitors, complete)
-                if cmd then
-                    async_run(cmd, function()
-                        xrandr.save_dpi_merge_restart(dpi)
-                    end, true, false)
-                end
+-- stack all connected outputs horizontally, auto-using preferred mode
+-- @param data table
+-- @param monitors table, default data.Searchkey
+-- @param complete, dpi: ignored, (false, 96)
+function xrandr.template_hline_auto(data, monitors, complete, dpi)
+    local cmd = 'xrandr'
+    local left_Mi, Mi
+    monitors = monitors or data.Searchkey
+    for i, key in pairs(monitors) do
+        Mi = data:get(key)
+        if Mi then
+            cmd = cmd .. ' --output ' .. Mi.out .. ' --auto'
+            if Mi.primary then
+                cmd = cmd .. ' --primary'
             end
-        end, false, true)
-    end
-    return { args.menuname, func }
-end
-
--- parse `xrandr -q` output, like this:
---      Screen 0: ...
---      eDP1 connected primary 1366x768+0+0 (normal ...
---         1366x768      60.00*+
---      DP1 disconnected (normal left inverted right x axis y axis)
---      HDMI1 connected (normal left inverted right x axis y axis)
---         1920x1080     60.00 +  50.00
--- return connected monitors name table, like { eDP1, HDMI1 }
-local function simple_parse_q(output)
-    local res = {}
-    for s in string.gmatch(output, "[^\r\n]+") do
-        local N = string.match(s, '^([%w-]+) connected.*%(normal ')
-        if N then
-            table.insert(res, N)
+            if left_Mi then
+                cmd = cmd .. ' --right-of ' .. left_Mi.out
+            end
+            left_Mi = Mi
         end
     end
-    return res
+    return cmd
 end
 
--- @param args.info string all screen info set by user,
---  like `xrandr --listmonitors` output
--- @param args.items table used to generate awful menu items, see menu_item
--- @return awful menu items
-function xrandr.new(args)
-    local args = args or {}
-    local data0 = parse_listmonitors(args.info or '')
-    local items = {
-        { "show0", function()
-            data0:show()
-        end },
-        { "showX", function()
-            async_run(xcmd_list, function(stdout, stderr, reason, exit_code)
-                if exit_code == 0 then
-                    local data = parse_listmonitors(stdout)
-                    data:show()
-                end
-            end, false, true)
-        end },
-        { "showA", function()
-            local text = {}
-            for s in capi.screen do
-                table.insert(text, string.format(
-                    "Screen: %d\nDPI: %d\nGeometry: %dx%d",
-                    s.index, s.dpi, s.geometry.width, s.geometry.height))
-            end
-            naughty.notify({ text = table.concat(text, '\n\n') })
-        end },
-        { string.rep('-', 10), function () end }, -- sep
-        { "H-all", function()
-            async_run('xrandr -q', function(stdout, stderr, reason, exit_code)
-                if exit_code == 0 then
-                    local cmd = 'xrandr'
-                    outs = simple_parse_q(stdout)
-                    for i, o in pairs(outs) do
-                        cmd = cmd .. ' --output ' .. o .. ' --auto'
-                        if i == 1 then
-                            cmd = cmd .. ' --primary'
-                        else
-                            cmd = cmd .. ' --right-of ' .. outs[i-1]
-                        end
-                    end
-                    async_run(cmd, nil, true, false)
-                end
-            end, false, true)
-        end },
-    }
-    for _, v in pairs(args.items or {}) do
-        table.insert(items, xrandr.menu_item(v, data0)) -- add to menu
+-- example: call *template* function, like xrandr.template_hline_scale
+-- @param template string or function, args: (data, monitors, complete, dpi)
+--      - monitors: default all connected monitors
+--      - complete: default false
+--      - dpi: default 96
+function xrandr.example_call_template(template)
+    if type(template) == 'string' then
+        template = xrandr[template]
     end
-    return items
+    if type(template) ~= 'function' then
+        util.print_info("Err: Lost template function!")
+        return
+    end
+    util.async(xrandr.cmd_prop, function(stdout, stderr, reason, exit_code)
+        if exit_code == 0 then
+            local data = xrandr.parse_prop_output(stdout)
+            local cmd = template(data)
+            util.async_with_shell(cmd)
+        end
+    end)
 end
 
-function xrandr.mt:__call(...)
-    return xrandr.new(...)
+-- call xrandr.template_hline_auto
+function xrandr.example_call_hline_auto()
+    xrandr.example_call_template(xrandr.template_hline_auto)
 end
 
-return setmetatable(xrandr, xrandr.mt)
+-- call xrandr.template_hline_scale
+function xrandr.example_call_hline_scale()
+    xrandr.example_call_template('template_hline_scale')
+end
+
+xrandr.Xresources = util.get_xdg_cache_home() .. 'away.Xresources'
+
+-- save dpi Xcursor.size to away.Xresources (~/.cache/away.Xresources),
+-- and xrdb -merge it, then call callback
+-- @param callback function fired without arguments
+function xrandr.save_dpi_and_merge(dpi, callback)
+    dpi = dpi or 96
+    local csize = math.min(math.floor(dpi/96+0.5)*16, 64)
+    os.remove(xrandr.Xresources)
+    util.async_with_shell(
+        string.format("echo 'Xft.dpi: %d\nXcursor.size: %d' > %s",
+                      dpi, csize, xrandr.Xresources),
+        function()
+            util.async("xrdb -merge " .. xrandr.Xresources, callback, false)
+        end,
+        false)
+end
+
+-- read dpi from away.Xresources, then call callback to set dpi
+-- @param callback function fired with dpi as argument
+function xrandr.read_and_set_dpi(callback)
+    if type(callback) == 'function' then
+        local dpi = 96 -- default
+        -- util.async deprecated, get dpi immediately
+        local file = io.open(xrandr.Xresources, 'r')
+        if file then
+            local m = string.match(file:read(), 'Xft.dpi:%s*(%d+)%s*')
+            file:close()
+            if m then
+                dpi = tonumber(m)
+            end
+        end
+        callback(dpi)
+    end
+end
+
+return xrandr
