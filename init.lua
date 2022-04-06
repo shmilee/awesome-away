@@ -14,5 +14,6 @@ return {
     third_party = require("away.third_party"),
     menu = require("away.menu"),
     xrandr = require("away.xrandr"),
+    xrandr_menu = require("away.xrandr_menu"),
     util   = require("away.util"),
 }
