@@ -15,7 +15,7 @@ local math = { ceil=math.ceil, max=math.max, floor=math.floor, min=math.min }
 local table = { insert=table.insert, concat=table.concat,
     unpack=table.unpack, remove=table.remove }
 local os = { remove = os.remove }
-local io = { open = io.open }
+local io = { open = io.open, popen=io.popen }
 
 local utilloaded, util
 for _,c in pairs({ "away.util", "util", "awesome-away.util" }) do
@@ -214,6 +214,14 @@ function xrandr.parse_prop_output(output)
         end
     end
     return res
+end
+
+-- show `parse_prop_output` results
+function xrandr.debug_monitors_data()
+    local out = io.popen(xrandr.cmd_prop)
+    local stdout = out:read("*all")
+    local success, reason, code = out:close()
+    return success and xrandr.parse_prop_output(stdout)
 end
 
 -- show info about all connected outputs
