@@ -13,61 +13,41 @@ local capi = { screen = screen, }
 local util = require("away.util")
 local xrandr = require("away.xrandr")
 local naughty = require("naughty")
-local pairs, type, setmetatable = pairs, type, setmetatable
+local pairs, setmetatable = pairs, setmetatable
 local string = { format=string.format, rep = string.rep }
 local table = { insert=table.insert, concat=table.concat }
 
 local xrandr_menu = { mt={} }
 
--- s.dpi ~= dpi, then restart awesome
-function xrandr_menu.compare_dpi_restart(dpi)
-    for s in capi.screen do
-        if s.dpi ~= dpi then
-            local line = string.rep('-', 15)
-            util.print_info(line .. " Restart awesome " .. line)
-            awesome.restart() -- no need break
-        end
-    end
-end
-
 -- @param args table {
 --      menuname='A',
---      template=function or string,  -- default xrandr.template_hline_scale
+--      template=function or string,  -- default xrandr.template_hline_auto
 --      complete=false,  -- default false
 --      dpi=96,          -- default 96
---      monitors={       -- default all connected monitors, scale=1.0
---          { key='Search key1', scale=1.0 }, ...,
+--      monitors={       -- default all connected monitors
+--          -- default scale=1.0 for xrandr.template_hline_scale
+--          { key='Search key1', scale=1.0 }, 'Search key2', ...,
 --      },
 --  }
 -- @return a menu item { menuname, function() ... end }
 function xrandr_menu.item(args)
-    local args = args or { menuname='xrandr' }
-    local template = xrandr.template_hline_scale
-    if type(args.template) == 'function' then
-        template = args.template
-    elseif type(args.template) == 'string' then
-        template = xrandr[args.template] or xrandr.template_hline_scale
-    end
-    local dpi = args.dpi or 96
-    local func = function()
-        util.async(xrandr.cmd_prop, function(stdout, err, reason, exit_code)
-            if exit_code == 0 then
-                local data = xrandr.parse_prop_output(stdout)
-                local cmd = template(data, args.monitors, args.complete, dpi)
-                if cmd then
-                    util.async_with_shell(cmd, function()
-                        xrandr.save_dpi_and_merge(dpi, function()
-                            xrandr_menu.compare_dpi_restart(dpi)
-                        end)
-                    end, false)
+    local args = args or {}
+    return { args.menuname or 'xrandr', function()
+        xrandr.call_template(args, function()
+            local dpi = args.dpi or 96
+            -- s.dpi ~= dpi, then restart awesome
+            for s in capi.screen do
+                if s.dpi ~= dpi then
+                    local line = string.rep('-', 15)
+                    util.print_info(line .. " Restart awesome " .. line)
+                    awesome.restart() -- no need break
                 end
             end
         end)
-    end
-    return { args.menuname, func }
+    end }
 end
 
--- @param items table used to generate awful menu items, see menu_item
+-- @param items table used to generate awful menu items, see xrandr_menu.item
 -- @return awful menu items
 function xrandr_menu.new(items)
     local menu_items = {

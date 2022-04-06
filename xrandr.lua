@@ -300,6 +300,7 @@ end
 --      no connected monitors
 --      or if complete is true and find one monitor not connected
 function xrandr.template_hline_scale(data, monitors, complete, dpi)
+    util.print_info("Using template: 'template_hline_scale'...")
     local Mis, off = xrandr.filter_scale_monitors(data, monitors, complete)
     if Mis == nil then
         return nil
@@ -326,6 +327,7 @@ end
 -- @param monitors table, default data.Searchkey
 -- @param complete, dpi: ignored, (false, 96)
 function xrandr.template_hline_auto(data, monitors, complete, dpi)
+    util.print_info("Using template: 'template_hline_auto'...")
     local cmd = 'xrandr'
     local left_Mi, Mi
     monitors = monitors or data.Searchkey
@@ -345,42 +347,11 @@ function xrandr.template_hline_auto(data, monitors, complete, dpi)
     return cmd
 end
 
--- example: call *template* function, like xrandr.template_hline_scale
--- @param template string or function, args: (data, monitors, complete, dpi)
---      - monitors: default all connected monitors
---      - complete: default false
---      - dpi: default 96
-function xrandr.example_call_template(template)
-    if type(template) == 'string' then
-        template = xrandr[template]
-    end
-    if type(template) ~= 'function' then
-        util.print_info("Err: Lost template function!")
-        return
-    end
-    util.async(xrandr.cmd_prop, function(stdout, stderr, reason, exit_code)
-        if exit_code == 0 then
-            local data = xrandr.parse_prop_output(stdout)
-            local cmd = template(data)
-            util.async_with_shell(cmd)
-        end
-    end)
-end
-
--- call xrandr.template_hline_auto
-function xrandr.example_call_hline_auto()
-    xrandr.example_call_template(xrandr.template_hline_auto)
-end
-
--- call xrandr.template_hline_scale
-function xrandr.example_call_hline_scale()
-    xrandr.example_call_template('template_hline_scale')
-end
-
 xrandr.Xresources = util.get_xdg_cache_home() .. 'away.Xresources'
 
 -- save dpi Xcursor.size to away.Xresources (~/.cache/away.Xresources),
 -- and xrdb -merge it, then call callback
+-- @param dpi number default 96
 -- @param callback function fired without arguments
 function xrandr.save_dpi_and_merge(dpi, callback)
     dpi = dpi or 96
@@ -411,6 +382,49 @@ function xrandr.read_and_set_dpi(callback)
         end
         callback(dpi)
     end
+end
+
+-- call args.template function, like xrandr.template_hline_scale
+--     args.template(data, args.monitors, args.complete, args.dpi)
+-- then call xrandr.save_dpi_and_merge, with custom callback
+-- @param args.template string or function, default xrandr.template_hline_auto
+-- @param args.monitors: default all connected monitors
+-- @param args.complete: default false
+-- @param args.dpi: default 96
+-- @param callback function: fired without arguments
+function xrandr.call_template(args, callback)
+    local args = args or {}
+    local template = args.template or xrandr.template_hline_auto
+    if type(template) ~= 'function' then
+        -- get by function name string
+        template = xrandr[template] or xrandr.template_hline_auto
+    end
+    if type(template) ~= 'function' then
+        util.print_error(string.format("Lost template function '%s'!",
+            tostring(args.template)))
+        return
+    end
+    util.async(xrandr.cmd_prop, function(stdout, stderr, reason, exit_code)
+        if exit_code == 0 then
+            local data = xrandr.parse_prop_output(stdout)
+            local cmd = template(data, args.monitors, args.complete, args.dpi)
+            if cmd then
+                util.async_with_shell(cmd, function()
+                    xrandr.save_dpi_and_merge(args.dpi, callback)
+                end, false)
+            end
+        end
+    end)
+end
+
+-- call xrandr.template_hline_auto
+function xrandr.example_call_hline_auto()
+    xrandr.call_template({ template=xrandr.template_hline_auto })
+end
+
+-- call xrandr.template_hline_scale
+function xrandr.example_call_hline_scale()
+    xrandr.call_template({ template='template_hline_scale' })
 end
 
 return xrandr
