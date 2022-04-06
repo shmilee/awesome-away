@@ -188,7 +188,7 @@ theme.editor_cmd = theme.terminal .. " -e '" .. theme.editor .. " %s'"
 away.menu.init({ icon_theme=theme.icon_theme })
 away.menu.menubar_nice_category_name()
 function theme.xrandr_menu()
-    return away.xrandr({})
+    return away.xrandr_menu({})
 end
 function theme.updates_menu()
     return {
@@ -437,7 +437,7 @@ function theme.set_dpi(s)
     else
         s.dpi = 96
     end
-    away.xrandr.read_set_dpi(function(dpi)
+    away.xrandr.read_and_set_dpi(function(dpi)
         if s.dpi < dpi then
             s.dpi = dpi
         end

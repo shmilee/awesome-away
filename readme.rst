@@ -405,30 +405,47 @@ menu
 xrandr menu
 -----------
 
+1. generate awful menu items:
+
 .. code:: lua
 
-    local xrandr_info = [[Monitors: 2
-     0: +*eDP1 1366/310x768/170+0+0  eDP1
-     1: +HDMI1 3840/1220x2160/690+1366+0  HDMI1
-    ]]
-    xrandr_menu = away.xrandr({
-        info = xrandr_info, -- all known monitors
-        items = {
-            { menuname="HS-MiTV", dpi=144, complete=true, monitors={
-                { key='eDP1-310x170', scale=1.5 }, -- laptop T450
-                { key='HDMI1-1220x690', scale=1.0 } -- MiTV
-            } },
-            { menuname='Reset', dpi=96, complete=true, monitors={
-                { key='eDP1-310x170', scale=1.0 }, -- laptop T450
-            } },
-        }
+    xrandr_menu = away.xrandr_menu({
+        { name="H-S-MiTV", dpi=144, complete=true, monitors={
+            { key='eDP1-310x170-0dae9-f11-7e-e', scale=1.5 },  -- laptop T450
+            { key='HDMI1-1220x690-61a44-a45-db-d', scale=1.0 } -- Mi TV
+        } },
+        { name='Reset', complete=true, monitors={
+            'eDP1-310x170-0dae9-f11-7e-e',  -- laptop T450, dpi=96, scale=1.0
+        } },
     })
-    -- show0: show info of all known monitors
-    -- showX: show connected monitors info get by 'xrandr --listmonitors'
+    -- showX: show connected monitors info get by 'xrandr -q --prop'
     -- showA: show screen info get from awesome
-    -- H-all: stack all connected outputs horizontally (--auto)
-    -- HS-MiTV: stack T450 scale=1.5, MiTV horizontally
+    -- Hline-auto: stack all connected outputs horizontally (--auto)
+    -- Hline-scale: stack all connected outputs horizontally (--scale 1.0)
+    -- H-S-MiTV: stack T450 scale=1.5, MiTV scale=1.0 horizontally
     -- Reset: only enable T450 scale=1.0, disable others (--off)
+
+2. Get keys in lua interactive mode:
+
+.. code:: lua
+
+   > xrandr = require("away.xrandr") -- or xrandr = require("xrandr")
+   > xrandr.show_connected()
+   2022-04-06 10:41:09 Away[I]: Run command: xrandr -q --prop, DONE with exit code 0
+   Monitor 1: 
+   Key: eDP1-310x170-0dae9-f11-7e-e
+   DPI: 112.59
+   Geometry: 1366x768
+   Size: 310mmx170mm
+   Preferred: 1366x768
+   
+   Monitor 2: Mi TV
+   Key: HDMI1-1220x690-61a44-a45-db-d
+   DPI: 79.85
+   Geometry: 3840x2160
+   Size: 1220mmx690mm
+   Preferred: 3840x2160
+   >
 
 
 Theme: think
