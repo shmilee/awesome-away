@@ -99,7 +99,7 @@ local function show_monitors_info(self)
                 Mi.preferred[1][1], Mi.preferred[1][2])
         end
     end
-    naughty.notify({ text = noti })
+    naughty.notify({ text=noti, timeout=0 })
 end
 
 xrandr.cmd_prop = "xrandr -q --prop"
