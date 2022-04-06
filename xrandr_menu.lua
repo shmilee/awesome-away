@@ -20,8 +20,8 @@ local table = { insert=table.insert, concat=table.concat }
 local xrandr_menu = { mt={} }
 
 -- @param args table {
---      menuname='A',
---      template=function or string,  -- default xrandr.template_hline_auto
+--      name='A',
+--      template=function or string,  -- default xrandr.template_hline_scale
 --      complete=false,  -- default false
 --      dpi=96,          -- default 96
 --      monitors={       -- default all connected monitors
@@ -29,10 +29,10 @@ local xrandr_menu = { mt={} }
 --          { key='Search key1', scale=1.0 }, 'Search key2', ...,
 --      },
 --  }
--- @return a menu item { menuname, function() ... end }
+-- @return a menu item { name, function() ... end }
 function xrandr_menu.item(args)
     local args = args or {}
-    return { args.menuname or 'xrandr', function()
+    return { args.name or 'xrandr', function()
         xrandr.call_template(args, function()
             local dpi = args.dpi or 96
             -- s.dpi ~= dpi, then restart awesome
@@ -63,6 +63,7 @@ function xrandr_menu.new(items)
         end },
         { string.rep('-', 10), function () end }, -- sep
         { "Hline-auto", xrandr.example_call_hline_auto },
+        { "Hline-scale", xrandr.example_call_hline_scale },
     }
     for _, v in pairs(items or {}) do
         table.insert(menu_items, xrandr_menu.item(v)) -- add to menu

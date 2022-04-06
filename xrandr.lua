@@ -332,7 +332,12 @@ function xrandr.template_hline_auto(data, monitors, complete, dpi)
     local left_Mi, Mi
     monitors = monitors or data.Searchkey
     for i, key in pairs(monitors) do
+        if type(key) == 'table' then
+            key = key.key
+        end
         Mi = data:get(key)
+        util.print_info("Search: " .. key .. ", get '"
+            .. tostring(Mi and (Mi.monitor_name or Mi.out)) .. "'")
         if Mi then
             cmd = cmd .. ' --output ' .. Mi.out .. ' --auto'
             if Mi.primary then
@@ -387,17 +392,16 @@ end
 -- call args.template function, like xrandr.template_hline_scale
 --     args.template(data, args.monitors, args.complete, args.dpi)
 -- then call xrandr.save_dpi_and_merge, with custom callback
--- @param args.template string or function, default xrandr.template_hline_auto
+-- @param args.template string or function, default xrandr.template_hline_scale
 -- @param args.monitors: default all connected monitors
 -- @param args.complete: default false
 -- @param args.dpi: default 96
 -- @param callback function: fired without arguments
 function xrandr.call_template(args, callback)
     local args = args or {}
-    local template = args.template or xrandr.template_hline_auto
-    if type(template) ~= 'function' then
-        -- get by function name string
-        template = xrandr[template] or xrandr.template_hline_auto
+    local template = args.template or xrandr.template_hline_scale
+    if type(template) == 'string' then
+        template = xrandr[template] -- get by function name
     end
     if type(template) ~= 'function' then
         util.print_error(string.format("Lost template function '%s'!",
