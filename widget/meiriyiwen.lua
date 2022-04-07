@@ -17,22 +17,24 @@ local os = { date = os.date }
 local math = { floor = math.floor }
 local string = { format = string.format }
 local type = type
+local URL = 'https://interface.meiriyiwen.com/article'
 
+-- URL .. '/today?dev=1'  last: 20200909
+-- URL .. '/random?dev=1'  date_get, date_art
+-- URL .. '/day?dev=1&date=2xx'  date: (20110308-20200909)
 local function worker(args)
     local args   = args or {}
-    local api    = args.api or 'https://interface.meiriyiwen.com/article/today?dev=1'
+    local api    = args.api or (URL .. '/random?dev=1')
     local curl   = args.curl or 'curl -f -s -m 7'
     local cmd    = string.format("%s '%s'", curl, api)
-    local setting = args.setting or function(data)
-        util.print_debug('meiriyiwen: ' .. (data['data']['title'] or 'N/A'))
-        local content = data['data']['content']
-        content = content:gsub("<p>", "    ")
-        content = content:gsub("</p>", "\n")
-        return string.format("\t\t<b>%s</b> (%s)\n%s\n",
-            data['data']['title'], data['data']['author'], content)
+    local setting = args.setting or function(wen)
+        wen.text = string.format(
+            "\t\t<b>%s</b>  <small><i>%s  <u>(%s)</u></i></small>\n%s\n",
+            wen.title, wen.author, wen.date_art, wen.text)
     end
     local wen = {
-        date=nil, text=nil,
+        date_art=nil, date_get=nil,
+        title=nil, author=nil, text=nil,
         font=args.font or nil,
         font_size=args.font_size or args.fsize or 10,
         ratio=args.ratio or 0,
@@ -50,7 +52,7 @@ local function worker(args)
     function wen.update(uargs)
         wen:set(uargs)
         if wen.text then
-            if wen.date == os.date('%Y%m%d') then
+            if wen.date_get == os.date('%Y%m%d') then
                 wen:show()
                 return
             end
@@ -58,8 +60,16 @@ local function worker(args)
         awful.spawn.easy_async(cmd, function(stdout, stderr, reason, exit_code)
             local data, pos, err = util.json.decode(stdout, 1, nil)
             if not err and type(data) == "table" then
-                wen.date = data['data']['date']['curr']
-                wen.text = setting(data)
+                util.print_debug('meiriyiwen: ' .. data['data']['title'])
+                wen.date_art = data['data']['date']['curr']
+                wen.date_get = os.date('%Y%m%d')
+                wen.title = data['data']['title']
+                wen.author = data['data']['author']
+                local content = data['data']['content']
+                content = content:gsub("<p>", "    ")
+                content = content:gsub("</p>", "\n")
+                wen.text = content
+                setting(wen)
                 wen:show()
             end
         end)
