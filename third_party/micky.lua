@@ -1,15 +1,22 @@
 local gears = require('gears')
 local naughty = require("naughty")
+local pairs = pairs
+local capi = {
+    awesome = awesome,
+    client = client,
+    mouse = mouse,
+    tag = tag,
+}
 
 -- adjust the time if you are on a slow cpu to give more time for the client
 local micky = { wait_time = 0.05 }
 
 -- relocate mouse to the client, default focus client
 function micky.move_to_client(c)
-    c = c or client.focus
+    c = c or capi.client.focus
     if c then
         local g = c:geometry()
-        mouse.coords({ 
+        capi.mouse.coords({
             x = g.x + g.width // 2,
             y = g.y + g.height // 2,
         }, true)
@@ -18,7 +25,7 @@ end
 
 -- class names defined here would insist micky stays where he is at.
 micky.stay_classes = { 
-    awesome
+    capi.awesome
     -- taskbar
 }
 
@@ -29,7 +36,7 @@ end
 
 -- check if client c is under mouse
 function micky.check_under(c)
-    return c == mouse.current_client
+    return c == capi.mouse.current_client
 end
 
 -- check if client c1, c2 have same coords
@@ -51,7 +58,7 @@ function micky.rule_focus(c)
         if micky.check_under(c) then
             return false
         end
-        if micky.check_coords(c, mouse.current_client) then
+        if micky.check_coords(c, capi.mouse.current_client) then
             return false
         end
         micky.move_to_client(c)
@@ -61,7 +68,7 @@ end
 
 -- default rule for signal swapped
 function micky.rule_swapped(c)
-    if c == client.focus then
+    if c == capi.client.focus then
         -- callback for only one client
         micky.rule_focus(c)
         -- naughty.notify({text=c.name})
@@ -72,7 +79,7 @@ end
 function micky.rule_unmanage(c)
     -- naughty.notify({text=c.name})
     gears.timer.weak_start_new(micky.wait_time, function()
-        micky.rule_focus(client.focus)
+        micky.rule_focus(capi.client.focus)
         return false
     end)
 end
@@ -81,29 +88,38 @@ end
 function micky.rule_layout(t)
     -- naughty.notify({text=t.name})
     gears.timer.weak_start_new(micky.wait_time, function()
-        micky.rule_focus(client.focus)
+        micky.rule_focus(capi.client.focus)
         return false
     end)
 end
 
--- flag for signal call enabled or not
+-- flag for signal `all_registered_rules`, enabled or not
 micky.enabled = false
+micky.all_registered_rules = {
+    -- { class e.g. client, signal e.g. 'focus', func e.g. micky.rule_focus }
+    { capi.client, "focus", micky.rule_focus },
+    { capi.client, "swapped", micky.rule_swapped },
+    { capi.client, "unmanage", micky.rule_unmanage },
+    { capi.tag, "property::layout", micky.rule_layout },
+}
 
--- enable all signal call rules
+-- enable signal `all_registered_rules`
 function micky.enable()
-    client.connect_signal("swapped", micky.rule_swapped)
-    client.connect_signal("focus", micky.rule_focus)
-    client.connect_signal("unmanage", micky.rule_unmanage)
-    tag.connect_signal("property::layout", micky.rule_layout)
+    for _, r in pairs(micky.all_registered_rules) do
+        if r[1] and r[1].connect_signal then
+            r[1].connect_signal(r[2], r[3])
+        end
+    end
     micky.enabled = true
 end
 
--- disable all signal call rules
+-- disable signal `all_registered_rules`
 function micky.disable()
-    client.disconnect_signal("swapped", micky.rule_swapped)
-    client.disconnect_signal("focus", micky.rule_focus)
-    client.disconnect_signal("unmanage", micky.rule_unmanage)
-    tag.disconnect_signal("property::layout", micky.rule_layout)
+    for _, r in pairs(micky.all_registered_rules) do
+        if r[1] and r[1].disconnect_signal then
+            r[1].disconnect_signal(r[2], r[3])
+        end
+    end
     micky.enabled = false
 end
 
@@ -122,4 +138,4 @@ return micky
 -- naughty.notify({text=focused_client.name})
 -- local inspect = require('inspect')
 -- naughty.notify({text=inspect(c:geometry())})
--- naughty.notify({text=inspect(mouse.current_widget_geometry)})
+-- naughty.notify({text=inspect(capi.mouse.current_widget_geometry)})
