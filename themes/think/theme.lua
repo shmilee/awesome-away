@@ -139,6 +139,19 @@ function theme.del_wallpaper_timer(s)
         s.videowallpaper.kill_and_set()
     end
 end
+
+function theme.update_focused_videowall()
+    local s = awful.screen.focused()
+    if s.videowallpaper then
+        s.videowallpaper.update()
+    end
+end
+function theme.kill_focused_videowall()
+    local s = awful.screen.focused()
+    if s.videowallpaper then
+        s.videowallpaper.kill_and_set()
+    end
+end
 -- }}}
 
 -- {{{ Styles
@@ -204,10 +217,11 @@ function theme.updates_menu()
                 s.miscwallpaper.update()
             end
         end },
-        { "video wall", function()
-            local s = awful.screen.focused()
-            if s.videowallpaper then
-                s.videowallpaper.update()
+        { "video wall", theme.update_focused_videowall },
+        { "kill videowall", theme.kill_focused_videowall },
+        { "weather", function()
+            if theme.widgets and theme.widgets.weather then
+                theme.widgets.weather.update()
             end
         end },
     }
