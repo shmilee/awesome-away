@@ -324,9 +324,9 @@ local _wweather = away.widget.weather.tianqi({
     --query = {.default.in.mod.},
     --curl = 'curl -f -s -m 1.7'
 })
+_wweather:attach(_wweather.wicon)
 -- 5. systray
 local _wsystray = wibox.widget.systray()
-_wweather:attach(_wweather.wicon)
 -- 6. battery
 local _wbattery = away.widget.battery({
     theme = theme,
@@ -506,18 +506,18 @@ function theme.createmywibox(s)
     s.mylayoutbox = awful.widget.layoutbox(s)
     s.mylayoutbox:buttons(theme.layoutbox_buttons)
     -- group all widgets
+    local _w = theme.widgets
     local enablewidgets = {
-        {_wmem.wicon, _wmem.wtext},
-        {_wcpu.wicon, _wcpu.wtext},
-        {_wtemp.wicon, _wtemp.wtext},
-        {_wvolume.wicon, _wvolume.wtext},
-        {_wbattery.wicon, _wbattery.wtext},
-        {_wsystray, _wweather.wicon, _wweather.wtext},
-        {_wlunar.wtext, _wtextclock},
+        {_w.mem.wicon, _w.mem.wtext},
+        {_w.cpu.wicon, _w.cpu.wtext},
+        {_w.temp.wicon, _w.temp.wtext},
+        {_w.volume.wicon, _w.volume.wtext},
+        {_w.battery.wicon, _w.battery.wtext},
+        {_w.systray, _w.weather.wicon, _w.weather.wtext},
+        {_w.lunar.wtext, _w.textclock},
         {s.mylayoutbox},
     }
     local right_layout_toggle = true
-    local wg, w
     for _, wg in ipairs(enablewidgets) do
         if right_layout_toggle then
             table.insert(s.mywibox.rightwidgets, arrl_ld)
