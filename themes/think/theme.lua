@@ -128,16 +128,24 @@ function theme.wallpaper(s)
     return theme.wallpaper_fallback[index]
 end
 
+function theme.del_selected_videowall(s)
+    if type(s) ~= 'screen' then
+        s = awful.screen.focused()
+    end
+    if s.videowallpaper then
+        away.util.print_info('HERE ')
+        s.videowallpaper.delete_timer()
+        s.videowallpaper.kill_and_set()
+        s.videowallpaper = nil
+    end
+end
 -- delete timer of wallpaper
 function theme.del_wallpaper_timer(s)
     away.util.print_info('Removed screen is ' .. gears.debug.dump_return(s.outputs))
     if s.miscwallpaper then
         s.miscwallpaper.delete_timer()
     end
-    if s.videowallpaper then
-        s.videowallpaper.delete_timer()
-        s.videowallpaper.kill_and_set()
-    end
+    theme.del_selected_videowall(s)
 end
 
 function theme.update_focused_videowall()
@@ -219,6 +227,7 @@ function theme.updates_menu()
         end },
         { "video wall", theme.update_focused_videowall },
         { "kill videowall", theme.kill_focused_videowall },
+        { "del videowall", theme.del_selected_videowall },
         { "weather", function()
             if theme.widgets and theme.widgets.weather then
                 theme.widgets.weather.update()
