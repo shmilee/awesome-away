@@ -271,7 +271,7 @@ function xrandr.filter_scale_monitors(data, monitors, complete)
             args = args .. string.format(
                 ' --mode %dx%d --scale %s',  W, H, scale)
             table.insert(res, { Mi, args, sW, sH})
-            local idx = util.table_index(connected, v.key)
+            local idx = util.table_hasitem(connected, v.key)
             if idx then
                 table.remove(connected, idx) -- remove needed
             end

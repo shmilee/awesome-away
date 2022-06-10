@@ -96,6 +96,8 @@ function theme.get_miscwall(s, i)
     end
 end
 
+theme.enable_videowall = true
+
 function theme.get_videowall(s, i)
     if i == 1 then
         --http://fy4.nsmc.org.cn/portal/cn/theme/FY4A.html
@@ -123,7 +125,7 @@ function theme.wallpaper(s)
     if s.videowallpaper then
         s.videowallpaper.update()
     else
-        s.videowallpaper = theme.get_videowall(s, index)
+        s.videowallpaper = theme.enable_videowall and theme.get_videowall(s, index)
     end
     return theme.wallpaper_fallback[index]
 end
@@ -133,7 +135,6 @@ function theme.del_selected_videowall(s)
         s = awful.screen.focused()
     end
     if s.videowallpaper then
-        away.util.print_info('HERE ')
         s.videowallpaper.delete_timer()
         s.videowallpaper.kill_and_set()
         s.videowallpaper = nil
@@ -212,11 +213,16 @@ function theme.xrandr_menu()
     return away.xrandr_menu({})
 end
 function theme.updates_menu()
-    return {
+    local t = {
         { "main menu", function()
             local s = awful.screen.focused()
             if s.mymainmenu then
                 s.mymainmenu:update()
+            end
+        end },
+        { "weather", function()
+            if theme.widgets and theme.widgets.weather then
+                theme.widgets.weather.update()
             end
         end },
         { "misc wall", function()
@@ -225,44 +231,44 @@ function theme.updates_menu()
                 s.miscwallpaper.update()
             end
         end },
-        { "video wall", theme.update_focused_videowall },
-        { "kill videowall", theme.kill_focused_videowall },
-        { "del videowall", theme.del_selected_videowall },
-        { "weather", function()
-            if theme.widgets and theme.widgets.weather then
-                theme.widgets.weather.update()
-            end
-        end },
     }
+    if theme.enable_videowall then
+        t = away.util.table_merge(t, {
+            { "video wall", theme.update_focused_videowall },
+            { "kill videowall", theme.kill_focused_videowall },
+            { "del videowall", theme.del_selected_videowall },
+        })
+    end
+    return t
 end
 function theme.awesomemenu()
-    return { {
-        "Awesome",
-        {
-            { "hotkeys", function()
-                hotkeys_popup.show_help(nil, awful.screen.focused())
-            end },
-            { "this bing", function()
-                local s = awful.screen.focused()
-                if s.miscwallpaper then
-                    s.miscwallpaper.print_using()
-                end
-            end },
+    local t = {
+        { "hotkeys", function()
+            hotkeys_popup.show_help(nil, awful.screen.focused())
+        end },
+        { "this bing", function()
+            local s = awful.screen.focused()
+            if s.miscwallpaper then
+                s.miscwallpaper.print_using()
+            end
+        end } }
+    if theme.enable_videowall then
+        t = away.util.table_merge(t, {
             { "this video", function()
                 local s = awful.screen.focused()
                 if s.videowallpaper then
                     s.videowallpaper.print_using()
                 end
-            end },
-            { "updates", theme.updates_menu() },
-            { "xrandr", theme.xrandr_menu() },
-            { "manual", theme.terminal .. " -e 'man awesome'" },
-            { "edit config", string.format(theme.editor_cmd, awesome.conffile) },
-            { "restart", awesome.restart },
-            { "quit", function() awesome.quit() end }
-        },
-        theme.awesome_icon,
-    } }
+            end } })
+    end
+    t = away.util.table_merge(t, {
+        { "updates", theme.updates_menu() },
+        { "xrandr", theme.xrandr_menu() },
+        { "manual", theme.terminal .. " -e 'man awesome'" },
+        { "edit config", string.format(theme.editor_cmd, awesome.conffile) },
+        { "restart", awesome.restart },
+        { "quit", function() awesome.quit() end } })
+    return { {"Awesome", t, theme.awesome_icon} }
 end
 function theme.custommenu()
     return {
