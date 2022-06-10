@@ -9,11 +9,12 @@
 ---------------------------------------------------------------------------
 
 local io, os, debug, table = io, os, debug, table
-local print, tostring, pairs, pcall, require
-    = print, tostring, pairs, pcall, require
+local print, tostring, pairs, ipairs, rawset, pcall, require
+    = print, tostring, pairs, ipairs, rawset, pcall, require
 local string = { format = string.format }
 local awfulloaded, awful = pcall(require, "awful")
 local gfsloaded, gfs = pcall(require, "gears.filesystem")
+local gtabloaded, gtable = pcall(require, "gears.table")
 
 local util = {}
 util.curdir = debug.getinfo(1, 'S').source:match[[^@(.*/).*$]]
@@ -92,16 +93,6 @@ function util.get_file_size(path)
     local size = file:seek("end")
     file:close()
     return size
-end
-
--- Return the index of element in the table *tab*
-function util.table_index(tab, el)
-    for i, v in pairs(tab) do
-        if v == el then
-            return i
-        end
-    end
-    return nil
 end
 
 -- Set Markup foreground, background color and more, like font, size, etc.
@@ -198,5 +189,43 @@ else
         return f ~= nil
     end
 end
+
+-- gtable part
+
+if gtabloaded then
+    util.table_crush = gtable.crush
+    util.table_hasitem = gtable.hasitem
+    util.table_merge = gtable.merge
+else
+    -- update table *t*
+    function util.table_crush(t, set, raw)
+        if raw then
+            for k, v in pairs(set) do
+                rawset(t, k, v)
+            end
+        else
+            for k, v in pairs(set) do
+                t[k] = v
+            end
+        end
+        return t
+    end
+    --- Check if a table has an item and return its key.
+    function util.table_hasitem(t, item)
+        for k, v in pairs(t) do
+            if v == item then
+                return k
+            end
+        end
+    end
+    --- Merge items from one table to another one.
+    function util.table_merge(t, set)
+        for _, v in ipairs(set) do
+            table.insert(t, v)
+        end
+        return t
+    end
+end
+util.table_update = util.table_crush
 
 return util
