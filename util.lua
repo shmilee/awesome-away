@@ -85,6 +85,7 @@ end
 
 util.json = util.find_available_module({
     'cjson', 'dkjson', 'away.third_party.dkjson',
+    'third_party.dkjson', 'awesome-away.third_party.dkjson',
 })
 
 -- Return path file size in bytes
