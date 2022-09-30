@@ -334,7 +334,7 @@ local _wlunar = away.widget.lunar({
 _wlunar:attach(_wlunar.wtext)
 -- 4. weather
 local _wweather = away.widget.weather.tianqi({
-    timeout = 600, -- 10 min
+    --timeout = 1800, -- 30 min
     font = wfont,
     --query = {.default.in.mod.},
     --curl = 'curl -f -s -m 1.7'

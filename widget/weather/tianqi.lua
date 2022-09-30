@@ -22,19 +22,20 @@ local function get_tianqiweather(args)
     args.api   = args.api or 'https://www.yiketianqi.com/api'
     args.query = args.query or {
         unescape=1,
-        version='v1',
-        --version='v9',
+        --version='v1',
+        version='v9',
         --appid=95327666, appsecret='uDwe3wVY',
         --appid=23035354, appsecret='8YvlPNrz',
         --appid=85841439, appsecret='EKCDLT4I',
         appid=43656176, appsecret='I42og6Lm',
     }
     --args.curl  = args.curl or 'curl -f -s -m 7'
+    args.timeout = args.timeout or 1800 -- 30 min
 
     -- set weather.now {city, wtype, wendu, aql, forecast, etc} for setting
     args.get_info  = args.get_info or function(weather, data)
-        --util.print_debug('get weather info of ' .. data['city'], args.id)     
         if data['data'] then
+            util.print_info('get weather info of ' .. data['city'], args.id)
             weather.now.city = data['city']
             -- try current wea, tem from data['data'][1]['hours']
             local wtype, wendu, lt_window = nil, nil, {}
