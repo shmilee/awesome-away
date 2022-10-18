@@ -225,6 +225,11 @@ function theme.updates_menu()
                 theme.widgets.weather.update()
             end
         end },
+        { "lunar", function()
+            if theme.widgets and theme.widgets.lunar then
+                theme.widgets.lunar.update()
+            end
+        end },
         { "misc wall", function()
             local s = awful.screen.focused()
             if s.miscwallpaper then
