@@ -246,11 +246,11 @@ function theme.updates_menu()
     end
     return t
 end
+theme.more_awesomemenu = nil
 function theme.awesomemenu()
     local t = {
-        { "hotkeys", function()
-            hotkeys_popup.show_help(nil, awful.screen.focused())
-        end },
+        { "updates", theme.updates_menu() },
+        { "xrandr", theme.xrandr_menu() },
         { "this bing", function()
             local s = awful.screen.focused()
             if s.miscwallpaper then
@@ -266,9 +266,14 @@ function theme.awesomemenu()
                 end
             end } })
     end
+    if type(theme.more_awesomemenu) == 'function' then
+        t = away.util.table_merge(t, theme.more_awesomemenu())
+    end
     t = away.util.table_merge(t, {
-        { "updates", theme.updates_menu() },
-        { "xrandr", theme.xrandr_menu() },
+        -- add default myawesomemenu
+        { "hotkeys", function()
+            hotkeys_popup.show_help(nil, awful.screen.focused())
+        end },
         { "manual", theme.terminal .. " -e 'man awesome'" },
         { "edit config", string.format(theme.editor_cmd, awesome.conffile) },
         { "restart", awesome.restart },
