@@ -15,13 +15,15 @@ local gfs  = require("gears.filesystem")
 local string = { gsub = string.gsub }
 
 -- Spotlight WallPaper: fetch Windows spotlight's images with meta data
+-- ref: https://github.com/ORelio/Spotlight-Downloader
 local function get_spotlightwallpaper(screen, args)
     local args = args or {}
     args.id    = args.id or 'Spotlight'
-    args.api   = args.api or "https://arc.msn.com/v3/Delivery/Cache"
+    args.api   = args.api or "https://arc.msn.com/v3/Delivery/Placement"
     args.query = args.query or {
-        fmt='json', lc='zh-CN', ctry='CN',
-        pid=279978, --pid: 209562, 209567, 279978
+        pid=338387, -- pid=279978, 209562, 209567, 279978
+        fmt='json', ua='WindowsShellClient', cdm=1,
+        pl='zh-CN', lc='zh-CN', ctry='CN',
     }
     args.choices  = args.choices or { 1, 2, 3, 4 }
     args.curl     = args.curl or 'curl -f -s -m 10 --header "User-Agent: WindowsShellClient"'
@@ -35,6 +37,8 @@ local function get_spotlightwallpaper(screen, args)
     args.get_url  = args.get_url or function(wp, data, choice)
         if data['batchrsp']['items'][choice] then
             local item, pos, err = util.json.decode(data['batchrsp']['items'][choice]['item'], 1, nil)
+            --local inspect = require("away.third_party.inspect")
+            --util.print_info('Spotlight check data: ' inspect(item))
             return item['ad']['image_fullscreen_001_landscape']['u'] -- drop 002 ...
         else
             return nil

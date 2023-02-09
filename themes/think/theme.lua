@@ -75,6 +75,10 @@ function theme.get_miscwall(s, i)
                 },
             },
             {
+                name = 'spotlight', weight = 1,
+                --args = {},
+            },
+            {
                 name = 'local', weight = 2,
                 args = {
                     id = 'Local bing',
