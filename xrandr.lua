@@ -13,7 +13,7 @@ local string = { byte=string.byte, gsub = string.gsub, char=string.char,
     gmatch=string.gmatch, match = string.match, format=string.format }
 local math = { ceil=math.ceil, max=math.max, floor=math.floor, min=math.min }
 local table = { insert=table.insert, concat=table.concat,
-    unpack=table.unpack, remove=table.remove }
+    sort=table.sort, unpack=table.unpack, remove=table.remove }
 local os = { remove = os.remove }
 local io = { open = io.open, popen=io.popen }
 
@@ -186,6 +186,9 @@ function xrandr.parse_prop_output(output)
     -- slim OUTS info
     local res = { Count=0, Primary=nil, Search={}, Searchkey={},
                   get=get_monitor_info, show=show_monitors_info }
+    local sortfun = function (a, b)
+        return a[1] > b[1]
+    end
     for _, out in pairs(OUTS) do
         if out['connected'] then
             local edid = out['properties']['EDID']
@@ -200,6 +203,7 @@ function xrandr.parse_prop_output(output)
             if monitor_name then
                 out['monitor_name'] = monitor_name
             end
+            table.sort(out['preferred'], sortfun)
             out['width'] = out['width'] or out['preferred'][1][1]
             out['height'] = out['height'] or out['preferred'][1][2]
             local W, H = out['width'], out['height']
