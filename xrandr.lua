@@ -36,6 +36,7 @@ if not naughtyloaded then
     end }
 end
 
+-- (width_mm)x(height_mm)-(max_width_preferred)x(max_height_preferred)
 -- key_style:  -- full --                               -- short --
 --    eDP1-310x170-1366x768-0dae9-f11-7e-e          eDP1-310x170-1366x768
 --  Mi-TV-HDMI1-1220x690-3840x2160-61a44-a45-db-d  Mi-TV-1220x690-3840x2160
@@ -205,7 +206,8 @@ function xrandr.parse_prop_output(output)
             local W, H = out['width'], out['height']
             local w, h = out['Hsize'], out['Vsize']
             out['DPI'] = math.ceil((W^2+H^2)^0.5/((w^2+h^2)^0.5/10/2.54)*100)/100
-            local key = string.format('%sx%s-%sx%s', w, h, W, H)
+            local key = string.format('%sx%s-%sx%s',
+                w, h, out['preferred'][1][1], out['preferred'][1][2])
             if xrandr.key_style == 'full' then
                 if name then
                     key = string.format('%s-%s-%s-%s', name, out['out'], key, esub)

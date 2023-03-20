@@ -411,11 +411,11 @@ xrandr menu
 
     xrandr_menu = away.xrandr_menu({
         { name="H-S-MiTV", dpi=144, complete=true, monitors={
-            { key='eDP1-310x170-0dae9-f11-7e-e', scale=1.5 },  -- laptop T450
-            { key='HDMI1-1220x690-61a44-a45-db-d', scale=1.0 } -- Mi TV
+            { key='eDP1-310x170-1366x768', scale=1.5 },  -- laptop T450
+            { key='Mi-TV-1220x690-3840x2160', scale=1.0 } -- Mi TV
         } },
         { name='Reset', complete=true, monitors={
-            'eDP1-310x170-0dae9-f11-7e-e',  -- laptop T450, dpi=96, scale=1.0
+            'eDP1-310x170-1366x768',  -- laptop T450, dpi=96, scale=1.0
         } },
     })
     -- showX: show connected monitors info get by 'xrandr -q --prop'
