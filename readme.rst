@@ -433,17 +433,17 @@ xrandr menu
    > xrandr.show_connected()
    2022-04-06 10:41:09 Away[I]: Run command: xrandr -q --prop, DONE with exit code 0
    Monitor 1: 
-   Key: eDP1-310x170-0dae9-f11-7e-e
+   Key: eDP1-310x170-1366x768
    DPI: 112.59
    Geometry: 1366x768
    Size: 310mmx170mm
    Preferred: 1366x768
    
-   Monitor 2: Mi TV
-   Key: HDMI1-1220x690-61a44-a45-db-d
-   DPI: 79.85
+   Monitor 2: DELL U2723QX
+   Key: DELL-U2723QX-600x340-3840x2160
+   DPI: 162.28
    Geometry: 3840x2160
-   Size: 1220mmx690mm
+   Size: 600mmx340mm
    Preferred: 3840x2160
    >
 

@@ -36,8 +36,11 @@ if not naughtyloaded then
     end }
 end
 
+-- key_style:  -- full --                               -- short --
+--    eDP1-310x170-1366x768-0dae9-f11-7e-e          eDP1-310x170-1366x768
+--  Mi-TV-HDMI1-1220x690-3840x2160-61a44-a45-db-d  Mi-TV-1220x690-3840x2160
 local xrandr = {
-    key_style = 'full'  -- 'full' or 'short'
+    key_style = 'short'  -- 'full' or 'short'
 }
 
 -- get some info from edid
@@ -109,10 +112,7 @@ xrandr.cmd_prop = "xrandr -q --prop"
 --      'Count', 'Primary', 'Search', 'Searchkey',
 --      'key'={out,width,height,Hsize,Vsize,DPI,connected,active,properties},
 --      :get(key), :show()
--- Search key, like this:
---            --full--                  --short--
---    eDP1-310x170-0dae9-f11-7e-e     eDP1-310x170
---  HDMI1-1220x690-61a44-a45-db-d    HDMI1-1220x690
+-- Search key, style defined by xrandr.key_style
 local output_example = [[
 Screen 0: minimum 8 x 8, current 1366 x 768, maximum 32767 x 32767
 eDP1 connected primary 1366x768+0+0 (normal left inverted right x axis y axis) 310mm x 170mm
@@ -192,16 +192,12 @@ function xrandr.parse_prop_output(output)
     for _, out in pairs(OUTS) do
         if out['connected'] then
             local edid = out['properties']['EDID']
-            local esub, w_mm, h_mm, monitor_name = xrandr.parse_edid(edid)
+            local esub, w_mm, h_mm, name = xrandr.parse_edid(edid)
             out['Hsize'] = out['Hsize'] or w_mm
             out['Vsize'] = out['Vsize'] or h_mm
-            local key = string.format('%s-%sx%s',
-                out['out'], out['Hsize'], out['Vsize'])
-            if xrandr.key_style == 'full' then
-                key = key .. '-' .. esub
-            end
-            if monitor_name then
-                out['monitor_name'] = monitor_name
+            if name then
+                out['monitor_name'] = name
+                name = name:gsub('%s', '-')
             end
             table.sort(out['preferred'], sortfun)
             out['width'] = out['width'] or out['preferred'][1][1]
@@ -209,6 +205,16 @@ function xrandr.parse_prop_output(output)
             local W, H = out['width'], out['height']
             local w, h = out['Hsize'], out['Vsize']
             out['DPI'] = math.ceil((W^2+H^2)^0.5/((w^2+h^2)^0.5/10/2.54)*100)/100
+            local key = string.format('%sx%s-%sx%s', w, h, W, H)
+            if xrandr.key_style == 'full' then
+                if name then
+                    key = string.format('%s-%s-%s-%s', name, out['out'], key, esub)
+                else
+                    key = string.format('%s-%s-%s', out['out'], key, esub)
+                end
+            else -- short
+                key = string.format('%s-%s', name or out['out'], key)
+            end
             res['Search'][key] = out
             table.insert(res['Searchkey'], key)
             res['Count'] = res['Count'] + 1
