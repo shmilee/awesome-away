@@ -2,7 +2,7 @@
 --
 --  Utility module for away: away.util
 --
---  Copyright (c) 2019 shmilee
+--  Copyright (c) 2019-2023 shmilee
 --  Licensed under GNU General Public License v2:
 --  https://opensource.org/licenses/GPL-2.0
 --
@@ -11,7 +11,7 @@
 local io, os, debug, table = io, os, debug, table
 local print, tostring, pairs, ipairs, rawset, pcall, require
     = print, tostring, pairs, ipairs, rawset, pcall, require
-local string = { format = string.format }
+local string = { format = string.format, gmatch = string.gmatch }
 local awfulloaded, awful = pcall(require, "awful")
 local gfsloaded, gfs = pcall(require, "gears.filesystem")
 local gtabloaded, gtable = pcall(require, "gears.table")
@@ -165,6 +165,41 @@ end
 
 function util.async_with_shell(cmd, callback, pass_args)
     async_run(spawn_async_with_shell, cmd, callback, pass_args)
+end
+
+-- @param program string
+-- @param args string Options and arguments for program
+-- @param matcher string A matching string to find the instance
+-- @param start string For autostart(default) or restart
+function util.single_instance(program, args, matcher, start)
+    if not program then
+        return nil
+    end
+    local cmd = program
+    if args then
+        cmd = cmd .. " " .. args
+    end
+    if not matcher then
+        matcher = cmd
+    end
+    start = start or 'autostart'
+    util.async_with_shell("pgrep -f -u $USER -x '" .. matcher .. "'", function(stdout, stderr, reason, code)
+        if code == 0 then
+            util.print_info("[SI] '" .. matcher .. "' is running! PID=" .. stdout)
+            if start ~= 'autostart' then
+                for pid in string.gmatch(stdout, "[^\r\n]+") do
+                    util.async_with_shell('kill ' .. pid, function(o, e, r, c)
+                        util.print_info("[SI] Restart '" .. matcher .. "'!")
+                        util.async_with_shell(cmd)  -- to restart
+                    end)
+                    break  -- only kill first match
+                end
+            end
+        else -- autostart
+            util.print_info("[SI] Autostart '" .. program .. "'!")
+            util.async_with_shell(cmd)
+        end
+    end)
 end
 
 -- gfs part
