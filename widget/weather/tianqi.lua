@@ -14,20 +14,25 @@ local base = require("away.widget.weather.base")
 local os = { date = os.date, time = os.time }
 local string = { gsub = string.gsub, format = string.format }
 
--- tianqi weather: fetch info from https://www.yiketianqi.com
--- ref: http://doc.tianqiapi.com/603579
+-- tianqi weather: fetch info from http://v0.yiketianqi.com
+-- ref: http://tianqiapi.com/index/doc
 local function get_tianqiweather(args)
     local args = args or {}
     args.id    = args.id or 'tianqi'
-    args.api   = args.api or 'https://www.yiketianqi.com/api'
+    args.api   = args.api or 'http://v0.yiketianqi.com/api'
     args.query = args.query or {
         unescape=1,
         --version='v1',
         version='v9',
-        --appid=95327666, appsecret='uDwe3wVY',
         --appid=23035354, appsecret='8YvlPNrz',
+        --appid=26371314, appsecret='qOhoD413',
+        --appid=43656176, appsecret='I42og6Lm',
+        --appid=73429187, appsecret='5KAnU3nY',
+        appid=83815731, appsecret='x8jaKkps',
+        --appid=84285355, appsecret='8bUEMUMv',
         --appid=85841439, appsecret='EKCDLT4I',
-        appid=43656176, appsecret='I42og6Lm',
+        --appid=95327666, appsecret='uDwe3wVY',
+        --appid=97859956, appsecret='Jjoc7T35',
     }
     --args.curl  = args.curl or 'curl -f -s -m 7'
     args.timeout = args.timeout or 1800 -- 30 min
