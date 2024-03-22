@@ -171,7 +171,8 @@ end
 -- @param args string Options and arguments for program
 -- @param matcher string A matching string to find the instance
 -- @param start string For autostart(default) or restart
-function util.single_instance(program, args, matcher, start)
+-- @param callback function passed to async_with_shell after start program
+function util.single_instance(program, args, matcher, start, callback)
     if not program then
         return nil
     end
@@ -183,21 +184,30 @@ function util.single_instance(program, args, matcher, start)
         matcher = cmd
     end
     start = start or 'autostart'
-    util.async_with_shell("pgrep -f -u $USER -x '" .. matcher .. "'", function(stdout, stderr, reason, code)
-        if code == 0 then
+    util.async_with_shell("pgrep -f -u $USER -x '" .. matcher .. "'",
+    function(stdout, stderr, reason, exit_code)
+        if exit_code == 0 then
             util.print_info("[SI] '" .. matcher .. "' is running! PID=" .. stdout)
             if start ~= 'autostart' then
                 for pid in string.gmatch(stdout, "[^\r\n]+") do
-                    util.async_with_shell('kill ' .. pid, function(o, e, r, c)
-                        util.print_info("[SI] Restart '" .. matcher .. "'!")
-                        util.async_with_shell(cmd)  -- to restart
+                    util.async_with_shell('kill ' .. pid, function(out, err, rsn, code)
+                        if code == 0 then
+                            util.print_info("[SI] Restart '" .. matcher .. "'!")
+                            util.async_with_shell(cmd, callback)  -- to restart
+                        else
+                            util.print_info('Try to kill -9 PID=' .. pid .. '! ' .. stderr)
+                            util.async_with_shell('kill -9 ' .. pid, function(o, e, r, c)
+                                util.print_info("[SI] Restart '" .. matcher .. "'!")
+                                util.async_with_shell(cmd, callback)  -- to restart
+                            end)
+                        end
                     end)
                     break  -- only kill first match
                 end
             end
         else -- autostart
             util.print_info("[SI] Autostart '" .. program .. "'!")
-            util.async_with_shell(cmd)
+            util.async_with_shell(cmd, callback)
         end
     end)
 end
