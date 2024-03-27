@@ -104,10 +104,10 @@ theme.enable_videowall = true
 
 function theme.get_videowall(s, i)
     if i == 1 then
-        --http://fy4.nsmc.org.cn/portal/cn/theme/FY4A.html
+        --http://fy4.nsmc.org.cn/nsmc/cn/theme/FY4B.html
         return away.wallpaper.get_videowallpaper(s, {
             -- 3h, 6h, 12h, 24h, 48h, 72h
-            path = 'http://img.nsmc.org.cn/CLOUDIMAGE/FY4A/MTCC/VIDEO/FY4A.disk.24h.mp4',
+            path = 'http://img.nsmc.org.cn/CLOUDIMAGE/FY4B/AGRI/GCLR/VIDEO/FY4B.disk.gclr.24h.mp4',
             timeout = 3600*12,
         })
     else
