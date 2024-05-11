@@ -421,6 +421,17 @@ theme.widgets = {
     cpu = _wcpu,
     mem = _wmem, -- 10
 }
+-- group all widgets
+local _w = theme.widgets
+theme.groupwidgets = {
+    {_w.mem.wicon, _w.mem.wtext},
+    {_w.cpu.wicon, _w.cpu.wtext},
+    {_w.temp.wicon, _w.temp.wtext},
+    {_w.volume.wicon, _w.volume.wtext},
+    {_w.battery.wicon, _w.battery.wtext},
+    {_w.systray, _w.weather.wicon, _w.weather.wtext},
+    {_w.lunar.wtext, _w.textclock},
+}
 
 -- {{{ Buttons
 theme.root_buttons = gears.table.join(
@@ -535,17 +546,8 @@ function theme.createmywibox(s)
     s.mylayoutbox = awful.widget.layoutbox(s)
     s.mylayoutbox:buttons(theme.layoutbox_buttons)
     -- group all widgets
-    local _w = theme.widgets
-    local enablewidgets = {
-        {_w.mem.wicon, _w.mem.wtext},
-        {_w.cpu.wicon, _w.cpu.wtext},
-        {_w.temp.wicon, _w.temp.wtext},
-        {_w.volume.wicon, _w.volume.wtext},
-        {_w.battery.wicon, _w.battery.wtext},
-        {_w.systray, _w.weather.wicon, _w.weather.wtext},
-        {_w.lunar.wtext, _w.textclock},
-        {s.mylayoutbox},
-    }
+    local enablewidgets = away.util.table_merge({}, theme.groupwidgets)
+    enablewidgets = away.util.table_merge(enablewidgets, { {s.mylayoutbox} })
     local right_layout_toggle = true
     for _, wg in ipairs(enablewidgets) do
         if right_layout_toggle then
