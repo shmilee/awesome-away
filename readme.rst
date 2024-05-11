@@ -265,6 +265,31 @@ ALSA
         buttoncmds = { left="pavucontrol" },
     })
 
+API usage
+`````````
+
+.. code:: lua
+
+    chatokens = away.widget.apiusage({
+        api = "https://api.xxxx/v1/query/day_usage_details",
+        header = {
+            ['Content-Type']="application/json",
+            ['Authorization']="sk-xxxxxxxxxxx"
+        },
+        postdata = '{"days":3,"model":"gpt-%"}',
+        get_info = function(self, data)
+            self.now.icon = '??'
+            self.now.notification_icon = '??'
+            self.now.text = 'AI: ??'
+            self.now.notification_text = ''
+            for i = 1, #data do
+                self.now.notification_text = ??
+            end
+        end,
+    })
+    chatokens:attach(chatokens.wtext)
+    chatokens:attach(chatokens.wicon)
+
 Battery
 ````````
 
