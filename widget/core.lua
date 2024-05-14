@@ -34,7 +34,14 @@ function core.worker(args)
         args.update(base)
     end
 
-    base.timer = gears.timer({ timeout=args.timeout, autostart=true, callback=base.update })
+    base.updatebuttons = awful.util.table.join(
+        awful.button({}, 1, base.update),
+        awful.button({}, 2, base.update),
+        awful.button({}, 3, base.update))
+
+    if args.timeout ~= nil then
+        base.timer = gears.timer({ timeout=args.timeout, autostart=true, callback=base.update })
+    end
 
     return base
 end
@@ -63,6 +70,11 @@ function core.popup_worker(args)
         args.update(base)
     end
 
+    base.updatebuttons = awful.util.table.join(
+        awful.button({}, 1, base.update),
+        awful.button({}, 2, base.update),
+        awful.button({}, 3, base.update))
+
     function base:show()
         self:hide()
         self.notification = naughty.notify({
@@ -86,9 +98,54 @@ function core.popup_worker(args)
         obj:connect_signal("mouse::leave", function() self:hide() end)
     end
 
-    base.timer = gears.timer({ timeout=args.timeout, autostart=true, callback=base.update })
+    if args.timeout ~= nil then
+        base.timer = gears.timer({ timeout=args.timeout, autostart=true, callback=base.update })
+    end
 
     return base
+end
+
+-- @param workers children workers
+-- @param args for wibox.widget
+--      like selected worker widgets(wicon, wtext)
+--      like default layout=wibox.layout.fixed.horizontal
+function core.group(workers, args)
+    local workers  = workers or {}
+    local args     = args or {}
+    args.layout    = args.layout or wibox.layout.fixed.horizontal
+    if args.layout == 'horizontal' or args.layout == 'h' then
+        args.layout = wibox.layout.fixed.horizontal
+    elseif args.layout == 'vertical' or args.layout == 'v' then
+        args.layout = wibox.layout.fixed.vertical
+    end
+    local wlayout = wibox.widget(args)
+    local function update_workers()
+        for _, w in ipairs(workers) do
+            w.update()
+        end
+    end
+    local updatebuttons = awful.util.table.join(
+        awful.button({}, 1, update_workers),
+        awful.button({}, 2, update_workers),
+        awful.button({}, 3, update_workers)
+    )
+    local function attach(self, obj)
+        obj:connect_signal("mouse::enter", function()
+            for _, w in ipairs(self.workers) do
+                w:show()
+            end
+        end)
+        obj:connect_signal("mouse::leave", function()
+            for _, w in ipairs(self.workers) do
+                w:hide()
+            end
+        end)
+    end
+    return {
+        workers = workers, wlayout = wlayout,
+        update_workers = update_workers, updatebuttons = updatebuttons,
+        attach = attach,
+    }
 end
 
 return core

@@ -16,13 +16,13 @@ local string = { format = string.format }
 local table = { insert = table.insert, concat = table.concat }
 local pairs, type = pairs, type
 
-function worker(args)
+local function worker(args)
     local args     = args or {}
     local id       = args.id or nil
     local api      = args.api or {}
     local query    = args.query or {}
     local header   = args.header or {}
-    local postdata     = args.postdata or ''  -- then method = POST
+    local postdata = args.postdata or ''  -- then method = POST
     local curl     = args.curl or 'curl -f -s -m 7'
     local get_info = args.get_info or function(self, data) end
     local setting  = args.setting or nil -- function(self) end
@@ -76,14 +76,13 @@ function worker(args)
     local usage = core.popup_worker(args)
     usage.timer:emit_signal('timeout')
 
-    buttons = awful.util.table.join(
-        awful.button({}, 1, usage.update),
-        awful.button({}, 2, usage.update),
-        awful.button({}, 3, usage.update))
-    usage.wicon:buttons(buttons)
-    usage.wtext:buttons(buttons)
-
     return usage
 end
 
-return worker
+local apiusage = { new=worker, group=core.group, mt = {} }
+
+function apiusage.mt:__call(...)
+    return apiusage.new(...)
+end
+
+return setmetatable(apiusage, apiusage.mt)

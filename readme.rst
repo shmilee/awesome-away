@@ -270,8 +270,8 @@ API usage
 
 .. code:: lua
 
-    chatokens = away.widget.apiusage({
-        api = "https://api.xxxx/v1/query/day_usage_details",
+    tokens0 = away.widget.apiusage({
+        api = "https://api.xxxx/v1/query/usage_detail",
         header = {
             ['Content-Type']="application/json",
             ['Authorization']="sk-xxxxxxxxxxx"
@@ -286,9 +286,21 @@ API usage
                 self.now.notification_text = ??
             end
         end,
+        timeout = 3600, font = 'Ubuntu Mono 14',
     })
-    chatokens:attach(chatokens.wtext)
-    chatokens:attach(chatokens.wicon)
+    -- single
+    tokens0:attach(tokens0.wtext)
+    tokens0:attach(tokens0.wicon)
+    tokens0.wicon:buttons(tokens0.updatebuttons)
+    -- multi, merge into one group
+    tokens1, tokens2 = ...  -- set more apiusage workers
+    alltokens = away.widget.apiusage.group(
+        { tokens0, tokens1, tokens2, ... },  -- arg-1: all apiusage workers
+        { tokens0.wicon, tokens0.wtext, tokens1.wtext, tokens2.wtext, ...,
+          layout = 'horizontal' }  -- arg-2 for wibox.widget
+    )
+    alltokens:attach(alltokens.wlayout)
+    alltokens.wlayout:buttons(alltokens.updatebuttons)
 
 Battery
 ````````
