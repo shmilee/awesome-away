@@ -70,6 +70,9 @@ local function worker(args)
                self.wicon:set_image(self.now.icon)
             end
             self.wtext:set_markup(self.now.text)
+            if self.notification then  -- need to open new naughty.notify
+                self:show()
+            end
         end)
     end
 
