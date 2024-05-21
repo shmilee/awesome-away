@@ -132,12 +132,16 @@ function core.group(workers, args)
     local function attach(self, obj)
         obj:connect_signal("mouse::enter", function()
             for _, w in ipairs(self.workers) do
-                w:show()
+                if w.show then
+                    w:show()
+                end
             end
         end)
         obj:connect_signal("mouse::leave", function()
             for _, w in ipairs(self.workers) do
-                w:hide()
+                if w.hide then
+                    w:hide()
+                end
             end
         end)
     end
