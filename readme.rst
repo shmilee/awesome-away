@@ -271,22 +271,34 @@ API usage
 .. code:: lua
 
     tokens0 = away.widget.apiusage({
-        api = "https://api.xxxx/v1/query/usage_detail",
-        header = {
-            ['Content-Type']="application/json",
-            ['Authorization']="sk-xxxxxxxxxxx"
+        timeout = 3600, font = 'Ubuntu Mono 14',
+        apis = {
+            {
+                url = "https://api.xxxx/v1/query/usage_detail",
+                header = {
+                    ['Content-Type']="application/json",
+                    ['Authorization']="sk-xxxxxxxxxxx"
+                },
+                postdata = '{"days":3,"model":"gpt-%"}',
+                get_info = function(self, data)
+                    for i = 1, #data do
+                        self.usage = ??
+                        self.detail += ??
+                    end
+                end,
+            },
+            {
+                url = "https://api.xxx/v1/query/balance",
+                query = ..., header = ..., postdata = ...,
+                get_info = ...,
+            },
         },
-        postdata = '{"days":3,"model":"gpt-%"}',
-        get_info = function(self, data)
+        setting = function(self)
             self.now.icon = '??'
             self.now.notification_icon = '??'
             self.now.text = 'AI: ??'
             self.now.notification_text = ''
-            for i = 1, #data do
-                self.now.notification_text = ??
-            end
-        end,
-        timeout = 3600, font = 'Ubuntu Mono 14',
+        end
     })
     -- single
     tokens0:attach(tokens0.wtext)
