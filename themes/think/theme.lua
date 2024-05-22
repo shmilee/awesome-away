@@ -400,8 +400,10 @@ _wcpu:attach(_wcpu.wicon)
 -- 10. MEM
 local _wmem = away.widget.memory({
     theme = theme,
+    font = wfont,
     timeout = 2,
 })
+_wmem:attach(_wmem.wicon)
 -- Separators
 local separators = away.third_party.separators
 local arrl_dl = separators.arrow_left(theme.bg_focus, "alpha")
