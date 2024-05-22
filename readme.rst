@@ -415,6 +415,9 @@ Memory
     mem = away.widget.memory({
         theme = theme,
         timeout = 2,
+        -- calculate mem.now.perc, mem.now.used by mem.now.info {MemTotal ...}
+        --calculate = function(mem) end,
+        -- setting mem.now.text, mem.now.notification_text
         --setting = function(mem) end,
     })
 
