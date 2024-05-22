@@ -88,6 +88,11 @@ util.json = util.find_available_module({
     'third_party.dkjson', 'awesome-away.third_party.dkjson',
 })
 
+util.inspect = util.find_available_module({
+    'inspect', 'third_party.inspect',
+    'away.third_party.inspect', 'awesome-away.third_party.inspect',
+})
+
 -- Return path file size in bytes
 function util.get_file_size(path)
     local file = io.open(path, "rb")
