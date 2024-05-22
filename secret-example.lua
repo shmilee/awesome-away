@@ -13,4 +13,7 @@ S.OPANAI_API_KEY = nil
 S.CA_KEY1 = nil  -- 'sk-xxx'
 S.CA_KEY2 = nil  --'sk-xxx'
 
+-- Weather yiketianqi
+S.yiketianqi_query = nil  --{unescape=1, version='v9', appid=?, appsecret='?'}
+
 return S

@@ -478,7 +478,7 @@ end
 local _wweather = away.widget.weather.tianqi({
     --timeout = 1800, -- 30 min
     font = wfont,
-    --query = {.default.in.mod.},
+    query = secret.yiketianqi_query,  -- default in tianqi.lua
     --curl = 'curl -f -s -m 1.7'
 })
 _wweather:attach(_wweather.wicon)

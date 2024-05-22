@@ -543,6 +543,11 @@ inherit **zenburn** theme, then add
    + default: WenQuanYi Micro Hei
    + widget: Ubuntu Mono
 
+8. read secret keys from `away.secret` (examples in `secret-example.lua`)
+
+   + ChatAnywhere API keys
+   + yiketianqi query, `appid, appsecret`
+
 .. _Awesome: https://github.com/awesomeWM/awesome
 .. _curl: https://curl.haxx.se/
 .. _dkjson: https://github.com/LuaDist/dkjson
