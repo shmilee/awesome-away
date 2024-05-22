@@ -528,7 +528,7 @@ inherit **zenburn** theme, then add
 5. Widgets from `away`, save to `theme.widgets`
 
    + textclock, calendar
-   + lunar, weather, battery, volume: need dependencies_
+   + lunar, apiusage, weather, battery, volume: need dependencies_
    + volume: also need pavucontrol, volnoti_
    + systray, coretemp, cpu, mem
 
