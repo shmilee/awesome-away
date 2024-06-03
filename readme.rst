@@ -12,6 +12,7 @@ Description
 This module provides wallpapers, widgets, themes and utilities for Awesome_ WM 4.x.
 Some partial widgets and utilities extracted from other repositories are also included in `./third_party`.
 
+`Screenshots <https://github.com/shmilee/config-awesome/issues/1>`_.
 
 Dependencies
 ------------
