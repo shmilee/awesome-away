@@ -397,80 +397,85 @@ local causage_api1 = function(KEY, model)
         get_info = get_info,
     }
 end
-local causages = {}
-if secret.CA_KEY1 then
-    table.insert(causages, away.widget.apiusage({
-        id = 'FreeCA', timeout= 3601, font = 'Ubuntu Mono 14',
-        apis = { causage_api1(secret.CA_KEY1, 'gpt-%') },
-        setting = function(self)
-            self.now.icon = theme.ca_icon1
-            self.now.notification_icon = theme.ca_icon2
-            local today =  self.today or { tokens=-1, count=-1, cost=-1 }
-            local text = string.format("<b>%d</b>", today.count)
-            if today.count > 70 then
-                text = away.util.markup_span(text, '#FF6600')
-            elseif today.count > 40 then
-                text = away.util.markup_span(text, '#E0DA37')
+local causage_api2 = function(KEY)
+    return {
+        url = "https://api.chatanywhere.org/v1/query/balance",
+        header = { ['Content-Type']  = "application/json",
+                   ['Authorization'] = KEY, },
+        postdata = '',
+        get_info = function(self, data)
+            -- get self.balance {.used, .total, .perc}
+            local used, total = data['balanceUsed'], data['balanceTotal']
+            local perc
+            if total == 0 then  -- free
+                perc = 0
+            else
+                perc = used/total*100
             end
-            self.now.text = text
-            local title = 'FreeModel: gpt-%'
-            local indent = string.rep(' ', (28-title:len())//2)
-            title = string.format('%s<b>%s</b>\n', indent, title)
-            self.now.notification_text = title .. (self.detail or '')
+            self.balance = { used=used, total=total, perc=perc }
         end
-        })
-    )
+    }
 end
-if secret.CA_KEY2 then
+local causages, cargs, timeout, plus = {}, nil, 3599, '+'
+for _, cargs in ipairs(secret.CA_API_USAGE) do
+    local key = cargs.key
+    local shortkey = string.sub(key,-4,-1)
     table.insert(causages, away.widget.apiusage({
-        id = 'BuyCA', timeout= 3599, font = 'Ubuntu Mono 14',
+        id = 'CA-sk-' .. shortkey, timeout= timeout, font = 'Ubuntu Mono 14',
         apis = {
-            causage_api1(secret.CA_KEY2, '%'),
-            { url = "https://api.chatanywhere.org/v1/query/balance",
-              header = { ['Content-Type']  = "application/json",
-                         ['Authorization'] = secret.CA_KEY2, },
-              postdata = '',
-              get_info = function(self, data)
-                -- get self.balance {.used, .total, .perc}
-                local used = data['balanceUsed']
-                local total = data['balanceTotal']
-                local perc = used/total*100
-                self.balance = { used=used, total=total, perc=perc }
-              end
-            },
+            causage_api1(key, cargs.model or '%'),
+            causage_api2(key),
         },
         setting = function(self)
-            self.now.icon = theme.gpt_icon4
-            self.now.notification_icon = theme.gpt_icon1
+            self.now.icon = theme[cargs.icon1 or 'ca_icon1']
+            self.now.notification_icon = theme[cargs.icon2 or 'ca_icon2']
+            local today =  self.today or { tokens=-1, count=-1, cost=-1 }
             local balance = self.balance or { used=-1, total=-1, perc=-1 }
-            local text = string.format("<b>+%.0f%%</b>", balance.perc)
-            if balance.perc > 80 then
-                text = away.util.markup_span(text, '#FF6600')
-            elseif balance.perc > 50 then
-                text = away.util.markup_span(text, '#E0DA37')
+            local text
+            if cargs.txt == 'count' then
+                text = string.format("<b>%s%d</b>", plus, today.count)
+                if today.count > 70 then
+                    text = away.util.markup_span(text, '#FF6600')
+                elseif today.count > 40 then
+                    text = away.util.markup_span(text, '#E0DA37')
+                end
+            elseif cargs.txt == 'perc' then
+                text = string.format("<b>%s%.0f%%</b>", plus, balance.perc)
+                if balance.perc > 80 then
+                    text = away.util.markup_span(text, '#FF6600')
+                elseif balance.perc > 50 then
+                    text = away.util.markup_span(text, '#E0DA37')
+                end
+            else  -- default text, used
+                text = string.format("<b>%s%.1f</b>", plus, balance.used)
             end
             self.now.text = text
-            local title = string.format('BuyModel: %.1f/%.1f',
-                                        balance.used, balance.total)
+            local title = string.format("sk-%s: %.2f", shortkey, balance.used)
+            if balance.total > 10000 then
+                title = title .. string.format("/%.1fw", balance.total/10000)
+            elseif balance.total > 0 then
+                title = title .. string.format("/%.0f", balance.total)
+            end
+            if cargs.model and cargs.model ~= '%' then
+                title = string.format('%s | %s', title, cargs.model)
+            end
             local indent = string.rep(' ', (28-title:len())//2)
             title = string.format('%s<b>%s</b>\n', indent, title)
             self.now.notification_text = title .. (self.detail or '')
-
         end
         })
     )
+    timeout = timeout + 1
 end
 --away.util.print_info(away.third_party.inspect(causages))
 local _wCA = {}
 if #causages > 0 then
     -- group( 1.workers, 2.wibox.widget args )
-    if #causages == 1 then
-        _wCA = away.widget.apiusage.group(causages,
-            { causages[1].wicon, causages[1].wtext })
-    elseif #causages == 2 then
-        _wCA = away.widget.apiusage.group(causages,
-            { causages[2].wicon, causages[1].wtext, causages[2].wtext } )
+    local cawidgets = { causages[1].wicon }
+    for _, causg in ipairs(causages) do
+        table.insert(cawidgets, causg.wtext)
     end
+    _wCA = away.widget.apiusage.group(causages, cawidgets)
     _wCA:attach(_wCA.wlayout)
     _wCA.wlayout:buttons(_wCA.updatebuttons)
 end
