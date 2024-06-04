@@ -34,4 +34,7 @@ S.CA_API_USAGE = {
 -- Weather yiketianqi
 S.yiketianqi_query = nil  --{unescape=1, version='v9', appid=?, appsecret='?'}
 
+-- article api
+S.mryw_api = nil
+
 return S

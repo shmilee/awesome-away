@@ -70,8 +70,12 @@ local function worker(args)
                 content = content:gsub("</p>", "\n")
                 wen.text = content
                 setting(wen)
-                wen:show()
+            else
+                local tmpl = "Error: %d, %s, %s. Please check your API: %s."
+                wen.text = string.format(tmpl, exit_code, stderr, err, api)
+                util.print_error('meiriyiwen ' .. wen.text)
             end
+            wen:show()
         end)
     end
 
