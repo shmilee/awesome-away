@@ -24,6 +24,7 @@ end
 
 -- inherit zenburn theme
 local theme = dofile(gfs.get_themes_dir() .. "zenburn/theme.lua")
+theme.secret = secret
 
 -- {{{ Main
 theme.dir = away.util.curdir .. "themes/think"
@@ -434,9 +435,9 @@ for _, cargs in ipairs(secret.CA_API_USAGE) do
             local text
             if cargs.txt == 'count' then
                 text = string.format("<b>%s%d</b>", plus, today.count)
-                if today.count > 70 then
+                if today.count > 128 then
                     text = away.util.markup_span(text, '#FF6600')
-                elseif today.count > 40 then
+                elseif today.count > 64 then
                     text = away.util.markup_span(text, '#E0DA37')
                 end
             elseif cargs.txt == 'perc' then
