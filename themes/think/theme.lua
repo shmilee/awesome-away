@@ -418,7 +418,7 @@ local causage_api2 = function(KEY)
     }
 end
 local causages, cargs, timeout, plus = {}, nil, 3599, '+'
-for _, cargs in ipairs(secret.CA_API_USAGE) do
+for _, cargs in ipairs(secret.CA_API_USAGE or {}) do
     local key = cargs.key
     local shortkey = string.sub(key,-4,-1)
     table.insert(causages, away.widget.apiusage({
