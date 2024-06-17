@@ -131,6 +131,10 @@ function base.worker(args)
                 weather.now.icon = weather.icon_dir .. "undefined.png"
                 weather.now.text = 'N/A'
                 weather.now.notification_text = "API/connection error or bad/not set city ID"
+                if weather.now.forecast then
+                    weather.now.notification_text =  string.format("%s\n%s",
+                        weather.now.notification_text, weather.now.forecast)
+                end
             end
             weather.now.notification_icon = weather.now.icon
             if setting then

@@ -93,8 +93,10 @@ local function get_tianqiweather(args)
                 if i < #data then
                     now_forecast = now_forecast .. "\n"
                 end
-             end
-             weather.now.forecast = now_forecast
+            end
+            weather.now.forecast = now_forecast
+        elseif data['errmsg'] then
+            weather.now.forecast = data['errmsg']
         end
     end
 
