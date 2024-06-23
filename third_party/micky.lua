@@ -1,3 +1,16 @@
+---------------------------------------------------------------------------
+--
+--  mouse module for away, move & center cursor to the focused window
+--
+--  Copyright (c) 2024 shmilee
+--  Copyright (c) 2021 basaran
+--  Licensed under GNU General Public License v2:
+--  https://opensource.org/licenses/GPL-2.0
+--
+--  ref: https://github.com/basaran/awesomewm-micky
+--
+---------------------------------------------------------------------------
+
 local gears = require('gears')
 local naughty = require("naughty")
 local pairs = pairs

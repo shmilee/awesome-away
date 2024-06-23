@@ -5,14 +5,14 @@ dkjson
 
 * url: http://dkolf.de/src/dkjson-lua.fsl/home
 * usage: http://dkolf.de/src/dkjson-lua.fsl/home
-* ver: Version 2.6 (2021-12-19)
+* ver: Version 2.8 (2024-06-17)
 
 inspect
 -------
 
 * url: https://github.com/kikito/inspect.lua
 * usage: https://github.com/kikito/inspect.lua#examples-of-use
-* ver: commit 3c7414a on Feb 9, 2022
+* ver: commit 8686162 on 23 Jan 2023
 
 micky
 -----
@@ -43,6 +43,6 @@ widget/cal
 
 * url: https://github.com/lcpz/lain/blob/master/widget/cal.lua
 * usage: https://github.com/lcpz/lain/wiki/cal
-* ver: commit 5882000 on 31 Mar 2021
+* ver: commit d2ac6f3 on 19 Oct 2022
 * fix: replace lain.helper, lain.util.markup, add icons
 
