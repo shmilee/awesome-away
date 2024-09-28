@@ -12,7 +12,7 @@ local util = require("away.util")
 local core = require("away.wallpaper.core")
 local gfs  = require("gears.filesystem")
 
-local string = { gsub = string.gsub }
+local string = { sub = string.sub, gsub = string.gsub }
 
 -- Spotlight WallPaper: fetch Windows spotlight's images with meta data
 -- ref: https://github.com/ORelio/Spotlight-Downloader
@@ -38,7 +38,7 @@ local function get_spotlightwallpaper(screen, args)
         if data['batchrsp']['items'][choice] then
             local item, pos, err = util.json.decode(data['batchrsp']['items'][choice]['item'], 1, nil)
             --local inspect = require("away.third_party.inspect")
-            --util.print_info('Spotlight check data: ' inspect(item))
+            --util.print_info('Spotlight check data: ' .. inspect(item))
             return item['ad']['image_fullscreen_001_landscape']['u'] -- drop 002 ...
         else
             return nil
@@ -46,7 +46,12 @@ local function get_spotlightwallpaper(screen, args)
     end
     args.get_name = args.get_name or function(wp, data, choice)
         if wp.url[choice] then
-            return string.gsub(wp.url[choice], "(.*/)(.*)%?.*=(.*)", "%2_%3.jpg")
+            local n = string.gsub(wp.url[choice], "(.*/)(.*)%?.*=(.*)", "%2_%3.jpg")
+            if string.sub(n,1,8) == "https://" then
+                n = string.gsub(n, "(.*/)(.*)", "%2")
+            end
+            --util.print_info(args.id .. ': ' .. n)
+            return n
         else
             return nil
         end
