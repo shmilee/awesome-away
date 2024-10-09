@@ -208,7 +208,6 @@ video wallpaper
 .. code:: lua
 
    -- get_videowallpaper(screen, args)
-   -- get_bilivideowallpaper(screen, args)
    wp = away.wallpaper.get_videowallpaper(screen, {
       id='Video test',
       path='/path/to/video/file.mp4',
@@ -241,8 +240,6 @@ video wallpaper
   +--------------+---------------------------------------------------------+-----------------+------------------------+
   | timeout      | refresh timeout seconds for updating wallpaper          | number (>=0)    | 0 (do not update)      |
   +--------------+---------------------------------------------------------+-----------------+------------------------+
-
-* additional `arg` for Bili Video Wallpaper, `choices={'dash-flv', 'flv720', ...}`
 
 
 Widget Usage
