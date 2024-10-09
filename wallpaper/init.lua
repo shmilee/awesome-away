@@ -178,6 +178,5 @@ end
 
 -- Video Wallpaper
 wallpaper.get_videowallpaper = core.get_videowallpaper
-wallpaper.get_bilivideowallpaper = require('away.wallpaper.bilivideo')
 
 return wallpaper

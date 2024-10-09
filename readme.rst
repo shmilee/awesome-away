@@ -21,18 +21,18 @@ Dependencies
 * dkjson_: decode json data, included in `./third_party`
 * xwinwrap_: optional, for video wallpaper `away.wallpaper.get_videowallpaper`
 * mpv_: optional, for video wallpaper `away.wallpaper.get_videowallpaper`
-* you-get_: optional, for Bilibili video wallpaper `away.wallpaper.get_bilivideowallpaper`
+* yt-dlp_: optional, for websites (like Bilibili) video wallpaper `away.wallpaper.get_videowallpaper`
 * alsa-utils_: optional, for `away.widget.alsa`
 * acpi_: optional, for `away.widget.battery`
 * sxtwl_: optional, for `away.widget.lunar`
 
-optional: install xwinwrap & mpv & you-get
+optional: install xwinwrap & mpv & yt-dlp
 ``````````````````````````````````````````
 
 .. code:: shell
 
     # archlinux
-    sudo pacman -S mpv you-get
+    sudo pacman -S mpv yt-dlp
     sudo yay -S xwinwrap-git
     # debian, ubuntu, etc
     sudo apt-get install mpv
@@ -554,7 +554,7 @@ inherit **zenburn** theme, then add
 .. _dkjson: https://github.com/LuaDist/dkjson
 .. _xwinwrap: https://github.com/ujjwal96/xwinwrap
 .. _mpv: https://mpv.io/
-.. _you-get: https://www.soimort.org/you-get/
+.. _yt-dlp: https://github.com/yt-dlp/yt-dlp
 .. _alsa-utils: https://www.alsa-project.org
 .. _acpi: https://sourceforge.net/projects/acpiclient/files/acpiclient/
 .. _sxtwl: https://github.com/yuangu/sxtwl_cpp
