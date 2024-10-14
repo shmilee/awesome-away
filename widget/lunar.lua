@@ -12,16 +12,13 @@
 local util  = require("away.util")
 local core  = require("away.widget.core")
 
-local os = { date = os.date }
+local os = { time = os.time, date = os.date }
 local string = { format = string.format }
 
 -- 调用寿星天文历库(寿星万年历)
 -- https://github.com/yuangu/sxtwl_cpp
 -- http://www.nongli.net/sxwnl/
 local sxtwl = util.find_available_module({'sxtwl'})
-if sxtwl then
-    sxtwl = sxtwl.Lunar()
-end
 
 -- 结果索引
 local Gan = {"甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"}
@@ -36,8 +33,8 @@ local jqmc = {"冬至", "小寒", "大寒",
               "立夏", "小满", "芒种", "夏至", "小暑", "大暑",
               "立秋", "处暑","白露", "秋分", "寒露", "霜降",
               "立冬", "小雪", "大雪"}
-local ymc = {"十一", "十二", "正", "二", "三", "四",
-             "五", "六", "七", "八", "九", "十"}
+local ymc = {"正", "二", "三", "四", "五", "六",
+             "七", "八", "九", "十", "十一", "十二"}
 local rmc = {"初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八",
              "初九", "初十", "十一", "十二", "十三", "十四", "十五", "十六",
              "十七", "十八", "十九", "二十", "廿一", "廿二", "廿三", "廿四",
@@ -45,28 +42,44 @@ local rmc = {"初一", "初二", "初三", "初四", "初五", "初六", "初七
 
 local function worker(args)
     local args   = args or {}
-    args.timeout = args.timeout or 3600
+    args.timeout = args.timeout or 10800
     args.font    = args.font or nil
+
+    local function get_next_jq(offset_max)
+        local current = os.time()
+        local res = {}
+        for offset = 1, offset_max or 365 do
+            local d = os.date('*t', current + 86400*offset)
+            local day = sxtwl.fromSolar(d.year, d.month, d.day)
+            local jq = day:getJieQi() + 1  -- 1-24, 256
+            --print(offset, jqmc[jq], jq)
+            if jqmc[jq] then
+                table.insert(res, {offset, jqmc[jq]})
+            end
+        end
+        return res
+    end
 
     function args.update(lunar)
         if sxtwl then
             local d = os.date('*t')
-            local ld= sxtwl:getDayBySolar(d.year, d.month, d.day)
+            local day = sxtwl.fromSolar(d.year, d.month, d.day)
+            local ygz = day:getYearGZ(true) -- true, 春节为界
+            local mgz = day:getMonthGZ()
+            local dgz  = day:getDayGZ()
             lunar.now = {
                 y = d.year,
                 m = d.month,
                 d = d.day,
-                month = ymc[ld.Lmc+1] .. "月",
-                day = rmc[ld.Ldi+1],
-                ly = Gan[ld.Lyear2.tg+1] .. Zhi[ld.Lyear2.dz+1] .. "年",
-                lm = Gan[ld.Lmonth2.tg+1] .. Zhi[ld.Lmonth2.dz+1] .. "月",
-                ld = Gan[ld.Lday2.tg+1] .. Zhi[ld.Lday2.dz+1] .. "日",
-                jq = jqmc[ld.qk+1], -- 节气，不存在则为jqmc[0] -> nil
-                cur_dz = ld.cur_dz,
-                cur_xz = ld.cur_xz,
-                cur_lq = ld.cur_lq,
+                month = ymc[day:getLunarMonth()] .. "月",
+                day = rmc[day:getLunarMonth()],
+                ly = Gan[ygz.tg+1] .. Zhi[ygz.dz+1] .. "年",
+                lm = Gan[mgz.tg+1] .. Zhi[mgz.dz+1] .. "月",
+                ld = Gan[dgz.tg+1] .. Zhi[dgz.dz+1] .. "日",
+                jq = jqmc[day:getJieQi()+1], -- 节气不存在,则jqmc[256] -> nil
+                next_jq = get_next_jq(),
             }
-            if ld.Lleap then
+            if day:isLunarLeap() then
                 lunar.now.month = "润" .. lunar.now.month
             end
             if args.setting then
@@ -80,12 +93,22 @@ local function worker(args)
                 if now.jq then
                     notitext = notitext .. ', ' .. now.jq
                 end
+                local jq_text = {}
+                local jq_filter = {'冬至', '春分', '夏至', '秋分'}
+                for i, jq in ipairs(now.next_jq) do
+                    if i == 1 or util.table_hasitem(jq_filter, jq[2]) then
+                        table.insert(jq_text, string.format('距%s%s天', jq[2], jq[1]))
+                    end
+                    if #jq_text == 3 then
+                        break
+                    end
+                end
                 now.notification_text =  string.format(
-                    '<b>%s</b>\n公历: %s年%s月%s日\n%s\n距冬至%s天\n距夏至%s天\n距立秋%s天',
+                    '<b>%s</b>\n公历: %s年%s月%s日\n%s\n%s',
                     notitext,
                     now.y, now.m, now.d,
                     now.ly .. now.lm .. now.ld,
-                    -now.cur_dz, -now.cur_xz, -now.cur_lq)
+                    table.concat(jq_text, '\n'))
             end
             if lunar.now.icon then
                 lunar.wicon:set_image(lunar.now.icon)

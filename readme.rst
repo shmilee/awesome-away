@@ -57,15 +57,33 @@ optional: install acpi
 optional: install sxtwl
 ```````````````````````
 
+About sxtwl version:
+  * date: Sep 6 2024
+  * commit: 601ac4cbec0c2a4c08060eb22cf08b4995effe4c
+
+About lua version, if several versions lua are installed in your system,
+sxtwl **must** use the same version lua of awesome.
+Like, awesome uses `lua53, 5.3.6`, but latest lua is `lua, 5.4.7`,
+then we need to edit the `CMakeLists.txt find_package(Lua) <https://cmake.org/cmake/help/latest/command/find_package.html#basic-signature>`_.
+
 .. code:: shell
 
    git clone https://github.com/yuangu/sxtwl_cpp.git
-   mkdir sxtwl_cpp/build
-   cd sxtwl_cpp/build
+   cd sxtwl_cpp/
+   # set lua version if needed
+   #sed -i 's|find_package(Lua)|find_package(Lua 5.3.6 EXACT)|' CMakeLists.txt
+
+   mkdir build
+   cd build/
    cmake .. -G "Unix Makefiles" -DSXTWL_WRAPPER_LUA=1
    cmake --build .
-   strip sxtwl_lua.so
-   cp sxtwl_lua.so ~/.config/awesome/sxtwl.so
+   strip libsxtwl_lua.so
+   # check lua version
+   ldd libsxtwl_lua.so | grep lua
+   ldd `which awesome` | grep lua
+
+   # install
+   cp libsxtwl_lua.so ~/.config/awesome/sxtwl.so
 
 
 Installation

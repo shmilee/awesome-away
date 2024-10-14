@@ -353,13 +353,12 @@ local _wcal = away.third_party.widget.cal({
     followtag = true,
 })
 --os.setlocale(os.getenv("LANG"))
-_wtextclock:disconnect_signal("mouse::enter", _wcal.hover_on)
 -- 3. lunar
 local _wlunar = away.widget.lunar({
     timeout  = 10800,
     font = wfont,
 })
-_wlunar:attach(_wlunar.wtext)
+_wlunar:attach(_wtextclock)
 -- 3.3 ChatAnywhere usage
 local causage_api1 = function(KEY, model)
     local get_info = function(self, data)
@@ -567,7 +566,7 @@ theme.groupwidgets = {
     {_w.volume.wicon, _w.volume.wtext},
     {_w.battery.wicon, _w.battery.wtext},
     {_w.systray, _w.weather.wicon, _w.weather.wtext, _wCA.wlayout},
-    {_w.lunar.wtext, _w.textclock},
+    {_w.textclock},
 }
 
 -- {{{ Buttons
