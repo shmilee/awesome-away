@@ -72,7 +72,7 @@ local function worker(args)
                 m = d.month,
                 d = d.day,
                 month = ymc[day:getLunarMonth()] .. "月",
-                day = rmc[day:getLunarMonth()],
+                day = rmc[day:getLunarDay()],
                 ly = Gan[ygz.tg+1] .. Zhi[ygz.dz+1] .. "年",
                 lm = Gan[mgz.tg+1] .. Zhi[mgz.dz+1] .. "月",
                 ld = Gan[dgz.tg+1] .. Zhi[dgz.dz+1] .. "日",
