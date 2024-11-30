@@ -321,7 +321,7 @@ theme.layout_magnifier  = theme.dir .. "/layouts/magnifier.png"
 theme.layout_floating   = theme.dir .. "/layouts/floating.png"
 local layouts = awful.layout.layouts
 theme.layouts = {
-    { layouts[1], layouts[1], layouts[2], layouts[1], layouts[1] },
+    { layouts[1], layouts[2], layouts[2] },
     layouts[2],
     layouts[1],
     layouts[2],
@@ -330,10 +330,12 @@ theme.layouts = {
 
 -- {{{ Tags
 theme.tagnames = {
-    { "宫", "商", "角", "徵", "羽" },
+    { "风", "雅", "颂", "赋", "比", "兴" },
+    { "宫", "商", "角", "徵", "羽", "文", "武" },
+    { "乾", "兑", "离", "震", "巽", "坎", "艮", "坤" },
     { "壹", "貳", "叄", "肆", "伍", "陸", "柒", "捌", "玖" },
-    { "一", "二", "三", "四", "五", "六", "七", "八", "九" },
-    {  1, 2, 3, 4, 5, 6, 7, 8, 9, 10 },
+    --{ "一", "二", "三", "四", "五", "六", "七", "八", "九", "十" },
+    --{  1, 2, 3, 4, 5, 6, 7, 8, 9, 10 },
 }
 -- }}}
 
