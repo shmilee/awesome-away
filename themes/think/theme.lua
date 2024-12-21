@@ -392,7 +392,7 @@ local causage_api1 = function(KEY, model)
         self.detail = table.concat(detail, '\n')
     end
     return {
-        url = "https://api.chatanywhere.org/v1/query/day_usage_details",
+        url = "https://api.chatanywhere.tech/v1/query/day_usage_details",
         header = { ['Content-Type']  = "application/json",
                    ['Authorization'] = KEY, },
         postdata = string.format('{"days":5,"model":"%s"}', model),
@@ -401,7 +401,7 @@ local causage_api1 = function(KEY, model)
 end
 local causage_api2 = function(KEY)
     return {
-        url = "https://api.chatanywhere.org/v1/query/balance",
+        url = "https://api.chatanywhere.tech/v1/query/balance",
         header = { ['Content-Type']  = "application/json",
                    ['Authorization'] = KEY, },
         postdata = '',
