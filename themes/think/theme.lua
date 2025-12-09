@@ -372,10 +372,10 @@ local causage_api1 = function(KEY, model)
         }
         local row = "%s\t<b>%s</b>\t <b>%d</b>\t<b>%.2f</b>"
         for i = #data,1,-1 do  -- reversed
-            local day = data[i]['time']:sub(6,10)  -- 5
-            local tokens = data[i]['totalTokens']
-            local count = data[i]['count']
-            local cost = data[i]['cost']
+            local day = data[i]['timeline']:sub(6,10)  -- 5
+            local tokens = data[i]['totalTokens'] or 0
+            local count = data[i]['count'] or 0
+            local cost = data[i]['cost'] or 0
             if tokens > 10000 then
                 tokens = string.format("%.1fw", tokens/10000)
             end
