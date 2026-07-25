@@ -61,7 +61,7 @@ local function worker(args)
     end
 
     function args.update(lunar)
-        if sxtwl then
+        if sxtwl and sxtwl.fromSolar then
             local d = os.date('*t')
             local day = sxtwl.fromSolar(d.year, d.month, d.day)
             local ygz = day:getYearGZ(true) -- true, 春节为界
