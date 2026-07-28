@@ -71,6 +71,19 @@ function util.simple_range(head, tail, step)
     return res
 end
 
+-- Get system host name immediately
+function util.get_hostname()
+    local out = io.popen('hostname')
+    local stdout = out:read("*all")
+    local success, reason, code = out:close()
+    if success and stdout then
+        -- Remove leading/trailing whitespace/newline
+        local trimmed = stdout:gsub("^%s*(.-)%s*$", "%1")
+        return trimmed
+    end
+    return nil
+end
+
 -- Return first available module in the candidates
 function util.find_available_module(candidates)
     local c, status, module
