@@ -21,11 +21,11 @@ local xrandr_menu = { mt={} }
 
 -- @param args table {
 --      name='A',
---      template=function or string,  -- default xrandr.template_hline_scale
+--      template=function or string,  -- default xrandr.template_horiz_scale
 --      complete=false,  -- default false
 --      dpi=96,          -- default 96
 --      monitors={       -- default all connected monitors
---          -- default scale=1.0 for xrandr.template_hline_scale
+--          -- default scale=1.0 for xrandr.template_horiz_scale
 --          { key='Search key1', scale=1.0 }, 'Search key2', ...,
 --      },
 --  }
@@ -62,8 +62,8 @@ function xrandr_menu.new(items)
             naughty.notify({ text=table.concat(text, '\n\n'), timeout=0 })
         end },
         { string.rep('-', 10), function () end }, -- sep
-        { "Hline-auto", xrandr.example_call_hline_auto },
-        { "Hline-scale", xrandr.example_call_hline_scale },
+        { "Horiz-auto", xrandr.example_call_horiz_auto },
+        { "Horiz-scale", xrandr.example_call_horiz_scale },
     }
     for _, v in pairs(items or {}) do
         table.insert(menu_items, xrandr_menu.item(v)) -- add to menu

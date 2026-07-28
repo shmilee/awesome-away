@@ -11,7 +11,7 @@
 local pairs, pcall, tonumber, tostring, type = pairs, pcall, tonumber, tostring, type
 local string = { byte=string.byte, gsub = string.gsub, char=string.char,
     gmatch=string.gmatch, match = string.match, format=string.format }
-local math = { ceil=math.ceil, max=math.max, floor=math.floor, min=math.min }
+local math = { abs=math.abs, ceil=math.ceil, max=math.max, floor=math.floor, min=math.min }
 local table = { insert=table.insert, concat=table.concat,
     sort=table.sort, unpack=table.unpack, remove=table.remove }
 local os = { remove = os.remove }
@@ -246,7 +246,52 @@ function xrandr.show_connected()
     end)
 end
 
--- filter needed monitors, scale preferred mode, add '--output' '--scale' args
+-- Extract physical size (first occurrence of "digitsxdigits") from a key string
+local function extract_size_from_key(key)
+    local w, h = string.match(key, '(%d+)x(%d+)')
+    if w and h then
+        return tonumber(w), tonumber(h)
+    end
+    return nil, nil
+end
+
+-- Extract the identifier prefix (part before first '-') from a key
+local function get_key_prefix(key)
+    return string.match(key, '^([^-]+)')
+end
+
+-- Match a target key against a list of candidate keys with tolerance on width/height (in mm)
+-- @param target_key string: the key to look for
+-- @param candidate_keys table: list of candidate keys (e.g., data.Searchkey)
+-- @param w_tol number: width tolerance (mm), default 10
+-- @param h_tol number: height tolerance (mm), default 10
+-- @return matched_key string or nil
+local function match_key_with_tolerance(target_key, candidate_keys, w_tol, h_tol)
+    w_tol = w_tol or 10
+    h_tol = h_tol or 10
+    local tw, th = extract_size_from_key(target_key)
+    local tprefix = get_key_prefix(target_key)
+    if not tw or not th or not tprefix then
+        return nil
+    end
+    for _, k in ipairs(candidate_keys) do
+        local kw, kh = extract_size_from_key(k)
+        local kprefix = get_key_prefix(k)
+        if kprefix == tprefix and kw and kh then
+            local dw = math.abs(kw - tw)
+            local dh = math.abs(kh - th)
+            if dw <= w_tol and dh <= h_tol then
+                util.print_info(string.format(
+                    "Tolerance match: '%s' -> '%s' (deviation: %dmm horizontal, %dmm vertical)",
+                    target_key, k, dw, dh))
+                return k
+            end
+        end
+    end
+    return nil
+end
+
+-- filter needed monitors, scale preferred mode, add '--output' '--scale' options
 --   data:connected monitors   |   | 2 | 3 |
 --   input:needed monitors     | 1 | 2 |   |
 -- @param data table current screen info get from xrandr:
@@ -256,36 +301,49 @@ end
 --      'Search key2',  -- monitor 2, default scale 1.0
 --      ...
 --  }
+-- @param w_tol number: width tolerance (mm), default 10
+-- @param h_tol number: height tolerance (mm), default 10
 -- @param complete true if require all needed monitors connected
--- @return nil or needed and connected monitors with corresponding args: {
+-- @return nil or needed and connected monitors with corresponding options: {
 --      { Mi, '--output %s --primary --mode %dx%d --scale %s', sW, sH },
 --      { ... }, ... }
--- @return nil or '--output --off' args: '--output Mi3.out --off ...'
-function xrandr.filter_scale_monitors(data, monitors, complete)
-    local res, off, args = {}, {}, nil
+-- @return nil or '--output --off' options: '--output Mi3.out --off ...'
+function xrandr.filter_scale_monitors(data, monitors, w_tol, h_tol, complete)
+    local res, off, options = {}, {}, nil
     local connected = { table.unpack(data.Searchkey) }
-    monitors = monitors or data.Searchkey
     for _, v in pairs(monitors) do
         if type(v) == 'string' then
             v = { key=v }
         end
         local Mi = data:get(v.key)
+        local m_key = nil  -- matched key
+        if Mi == nil then
+            -- Try tolerance‑based matching
+            m_key = match_key_with_tolerance(v.key, data.Searchkey, h_tol, v_tol)
+            if m_key then
+                Mi = data:get(m_key)
+            end
+        end
         util.print_info("Search: " .. v.key .. ", get '"
             .. tostring(Mi and (Mi.monitor_name or Mi.out)) .. "'")
         if Mi then
-            args = string.format('--output %s', Mi.out)
+            options = string.format('--output %s', Mi.out)
             if Mi.primary then
-                args = args .. ' --primary'
+                options = options .. ' --primary'
             end
             local scale = v.scale or 1.0
             local W, H = table.unpack(Mi['preferred'][1])
             local sW, sH = math.ceil(W*scale)//2*2, math.ceil(H*scale)//2*2
-            args = args .. string.format(
+            options = options .. string.format(
                 ' --mode %dx%d --scale %s',  W, H, scale)
-            table.insert(res, { Mi, args, sW, sH})
-            local idx = util.table_hasitem(connected, v.key)
+            table.insert(res, { Mi, options, sW, sH})
+            -- remove handled needed key
+            local idx = util.table_hasitem(connected, m_key or v.key)
             if idx then
-                table.remove(connected, idx) -- remove needed
+                table.remove(connected, idx)
+            else
+                util.print_error("Lost monitor to remove: "
+                    .. tostring(m_key or v.key))
             end
         else
             if complete then
@@ -309,52 +367,51 @@ function xrandr.filter_scale_monitors(data, monitors, complete)
 end
 
 -- stack needed monitors horizontally with scale support
--- @param data, monitors, complete, pass to `filter_scale_monitors`
 -- @param data table, monitors info
--- @param monitors table, default all connected
--- @param complete boolean, default false
--- @param dpi number, default 96
+-- @param args.monitors table, default all connected
+-- @param args.w_tol number: width tolerance (mm), default 10
+-- @param args.h_tol number: height tolerance (mm), default 10
+-- @param args.complete boolean, default false
+-- @param args.dpi number, default 96
 -- @return cmd string:
 --      xrandr --dpi %d --fb %dx%d [monitor1 args] ...
 -- @return nil:
 --      no connected monitors
 --      or if complete is true and find one monitor not connected
-function xrandr.template_hline_scale(data, monitors, complete, dpi)
-    util.print_info("Using template: 'template_hline_scale'...")
-    local Mis, off = xrandr.filter_scale_monitors(data, monitors, complete)
+function xrandr.template_horiz_scale(data, args)
+    util.print_info("Using template: 'template_horiz_scale'...")
+    args = args or {}
+    monitors = args.monitors or data.Searchkey
+    local Mis, off = xrandr.filter_scale_monitors(
+        data, monitors, args.w_tol, args.h_tol, args.complete)
     if Mis == nil then
         return nil
     end
     local res, fbw, fbh, posx = {}, 0, 0, 0
     for _, v in pairs(Mis) do
-        local Mi, args, sW, sH = v[1], v[2], v[3], v[4]
+        local Mi, options, sW, sH = v[1], v[2], v[3], v[4]
         -- right-of
-        args = args .. string.format(' --panning %dx%d+%d+%d', sW, sH, posx, 0)
+        options = options .. string.format(' --panning %dx%d+%d+%d', sW, sH, posx, 0)
         fbw, fbh = fbw + sW, math.max(fbh, sH)
         posx = posx + sW
-        table.insert(res, args)
+        table.insert(res, options)
     end
     if off ~= nil then
         table.insert(res, off)
     end
     table.insert(res, 1,
-        string.format('xrandr --dpi %d --fb %dx%d', dpi or 96, fbw, fbh))
+        string.format('xrandr --dpi %d --fb %dx%d', args.dpi or 96, fbw, fbh))
     return table.concat(res, ' ')
 end
 
 -- stack all connected outputs horizontally, auto-using preferred mode
 -- @param data table
--- @param monitors table, default data.Searchkey
--- @param complete, dpi: ignored, (false, 96)
-function xrandr.template_hline_auto(data, monitors, complete, dpi)
-    util.print_info("Using template: 'template_hline_auto'...")
+-- @param args table, not used
+function xrandr.template_horiz_auto(data, args)
+    util.print_info("Using template: 'template_horiz_auto'...")
     local cmd = 'xrandr'
     local left_Mi, Mi
-    monitors = monitors or data.Searchkey
-    for i, key in pairs(monitors) do
-        if type(key) == 'table' then
-            key = key.key
-        end
+    for i, key in pairs(data.Searchkey) do
         Mi = data:get(key)
         util.print_info("Search: " .. key .. ", get '"
             .. tostring(Mi and (Mi.monitor_name or Mi.out)) .. "'")
@@ -409,17 +466,19 @@ function xrandr.read_and_set_dpi(callback)
     end
 end
 
--- call args.template function, like xrandr.template_hline_scale
---     args.template(data, args.monitors, args.complete, args.dpi)
+-- call args.template function, like xrandr.template_horiz_scale
+--     args.template(data, args)
 -- then call xrandr.save_dpi_and_merge, with custom callback
--- @param args.template string or function, default xrandr.template_hline_scale
+-- @param args.template string or function, default xrandr.template_horiz_scale
 -- @param args.monitors: default all connected monitors
+-- @param args.w_tol number: width tolerance (mm), default 10
+-- @param args.h_tol number: height tolerance (mm), default 10
 -- @param args.complete: default false
 -- @param args.dpi: default 96
 -- @param callback function: fired without arguments
 function xrandr.call_template(args, callback)
-    local args = args or {}
-    local template = args.template or xrandr.template_hline_scale
+    args = args or {}
+    local template = args.template or xrandr.template_horiz_scale
     if type(template) == 'string' then
         template = xrandr[template] -- get by function name
     end
@@ -431,7 +490,7 @@ function xrandr.call_template(args, callback)
     util.async(xrandr.cmd_prop, function(stdout, stderr, reason, exit_code)
         if exit_code == 0 then
             local data = xrandr.parse_prop_output(stdout)
-            local cmd = template(data, args.monitors, args.complete, args.dpi)
+            local cmd = template(data, args)
             if cmd then
                 util.async_with_shell(cmd, function()
                     xrandr.save_dpi_and_merge(args.dpi, callback)
@@ -441,14 +500,14 @@ function xrandr.call_template(args, callback)
     end)
 end
 
--- call xrandr.template_hline_auto
-function xrandr.example_call_hline_auto()
-    xrandr.call_template({ template=xrandr.template_hline_auto })
+-- call xrandr.template_horiz_auto
+function xrandr.example_call_horiz_auto()
+    xrandr.call_template({ template=xrandr.template_horiz_auto })
 end
 
--- call xrandr.template_hline_scale
-function xrandr.example_call_hline_scale()
-    xrandr.call_template({ template='template_hline_scale' })
+-- call xrandr.template_horiz_scale
+function xrandr.example_call_horiz_scale()
+    xrandr.call_template({ template='template_horiz_scale' })
 end
 
 return xrandr
