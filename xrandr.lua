@@ -291,6 +291,27 @@ local function match_key_with_tolerance(target_key, candidate_keys, w_tol, h_tol
     return nil
 end
 
+-- Compare two monitor data.Searchkey
+-- data1: original data before running xrandr
+-- data2: new data after running xrandr
+-- Returns a human-readable diff string if Searchkey lists differ, otherwise nil.
+function xrandr.compare_data_Searchkey(data1, data2)
+    local keys1 = { table.unpack(data1.Searchkey or {}) }
+    local keys2 = { table.unpack(data2.Searchkey or {}) }
+    table.sort(keys1)
+    table.sort(keys2)
+    local diff = {}
+    for i = 1, #keys1 do
+        if keys1[i] ~= keys2[i] then
+            diff[#diff+1] = string.format("%s -> %s", keys1[i], keys2[i])
+        end
+    end
+    if #diff > 0 then
+        return "Monitor keys changed:\n" .. table.concat(diff, "; ")
+    end
+    return nil  -- no change
+end
+
 -- filter needed monitors, scale preferred mode, add '--output' '--scale' options
 --   data:connected monitors   |   | 2 | 3 |
 --   input:needed monitors     | 1 | 2 |   |
@@ -494,6 +515,20 @@ function xrandr.call_template(args, callback)
             if cmd then
                 util.async_with_shell(cmd, function()
                     xrandr.save_dpi_and_merge(args.dpi, callback)
+                    -- check data after cmd (xrandr --output xxx)
+                    util.async(xrandr.cmd_prop, function(new_stdout, _, _, new_exit)
+                        if new_exit == 0 then
+                            local data2 = xrandr.parse_prop_output(new_stdout)
+                            local diff = xrandr.compare_data_Searchkey(data, data2)
+                            if diff then
+                                naughty.notify({
+                                    preset = naughty.config.presets.warn,
+                                    title = "Monitor configuration changed, consider running xrandr setup again.",
+                                    text = diff,
+                                })
+                            end
+                        end
+                    end)
                 end, false)
             end
         end
